@@ -1,0 +1,51 @@
+# User-specific files
+*.suo
+*.user
+*.sln.docstates
+.vs/
+
+# misc
+*_i.c
+*_p.c
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.log
+*.scc
+
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+[Bb]in/
+[Oo]bj/
+[Cc]make/
+
+# Enable "build/" folder in the NuGet Packages folder since NuGet packages use it for MSBuild targets
+!packages/*/build/
+
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.VC.opendb
+*.dotCover
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
