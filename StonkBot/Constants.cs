@@ -2,9 +2,9 @@
 
 public class Constants
 {
-    public const string LocalDbFilePath = @"E:\projects\stonkBot\Data\StonkBot_Mark3.db";
-    public const string NetworkDbFilePath = @"Z:\Data\StonkBot_Mark3.db";
-    public const string DbBackupFolderPath = @"E:\projects\stonkBot\Data\Backups";
+    public const string LocalDbFilePath = @"redacted";
+    public const string NetworkDbFilePath = @"redacted";
+    public const string DbBackupFolderPath = @"redacted";
     public const int MaxDbBackupAge = 10;
     
     public const int ProgressTick = 100;
@@ -18,13 +18,13 @@ public class Constants
     public const string TDMultiQuoteUrl = "https://api.tdameritrade.com/v1/marketdata/quotes?symbol=PLACEHOLDER";
     public const string TDHistoricalQuoteUrl = "https://api.tdameritrade.com/v1/marketdata/SYMBOL/pricehistory?periodType=PERIODTYPE&period=PERIOD&frequencyType=FREQUENCYTYPE&frequency=1";
     public const string TDAmeritradeUserPrincipalsUrl = "https://api.tdameritrade.com/v1/userprincipals?fields=streamerSubscriptionKeys,streamerConnectionInfo";
-    public const string TDAmeritradeClientId = "6WDWKAYRVCUTOAQKJ0EOD3KALA8VZ2XC@AMER.OAUTHAP";
+    public const string TDAmeritradeClientId = "redacted";
 
-    public const string VolumeAlertWebhook = "https://discord.com/api/webhooks/1067440103351402586/9CtVbUb0Wjahnxd0Q1nyQ28pcI3LZlgrzfOI4fzCrgLpTTjDtm5Qsx9fwHQsTm9r2L1W";
-    public const string UpperShadowWebhook = "https://discord.com/api/webhooks/1067440506277204038/6n4d79tdTBZImyxtWb2DbUe-AaXvQ1z8MTDke3jlAuP4W_QnO5HR1AoRbTXIglObsMjF";
-    public const string FourHandWebhook = "https://discord.com/api/webhooks/1067440667137151036/WzO1wi_iGmt5IsBUh8Kpb-KiegUMShVLe2mo1UHStQvoP0sR78xeFSIZ1SxBcM313bqH";
-    public const string IpoWebhook = "https://discord.com/api/webhooks/1067440330770751520/7vsQ-srHAirtlsybyJwG6z3nZ4Ey5hiS633V_atHOXPXV9vFnvSqmPsvC0u3nteRUM17";
-    public const string EarningsReportWebhook = "https://discord.com/api/webhooks/1104834260524879892/vmmlgwIeYZyBUAI2IvXCCriLtSV3MWDSksKck0fMeQGzh_-ClTrY7p6lFdnNUehKyoAu";
+    public const string VolumeAlertWebhook = "redacted";
+    public const string UpperShadowWebhook = "redacted";
+    public const string FourHandWebhook = "redacted";
+    public const string IpoWebhook = "redacted";
+    public const string EarningsReportWebhook = "redacted";
 
     public const string TDRedirectUrl = "https://localhost:8080/";
     public const string TDAmeritradeBaseUrl = "https://api.tdameritrade.com/v1";
