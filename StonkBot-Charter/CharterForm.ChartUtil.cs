@@ -79,7 +79,7 @@ public sealed partial class CharterForm
                     .Where(x => x!.Price == t.Price)
                     .ToList();
 
-                // Is grouped
+                // Grouped handling
                 if (priceGroup.Count > 1)
                 {
                     tSeries.Points[thisT].Color = t.OrderType switch
@@ -95,16 +95,12 @@ public sealed partial class CharterForm
                         tSeries.Points[thisT].Color = Color.Fuchsia;
                     
                     var groupTooltip = $"Time: {candle.ChartTime:HH:mm tt}{Environment.NewLine}--------------------{Environment.NewLine}";
-                    foreach (var g in priceGroup)
-                    {
-                        groupTooltip += $"{g!.Price} -- {g.OrderType}{Environment.NewLine}";
-                    }
-
+                    priceGroup.ForEach(x => groupTooltip += $"{x!.Price} -- {x.OrderType}{Environment.NewLine}");
                     tSeries.Points[thisT].ToolTip = groupTooltip;
                     continue;
                 }
 
-                // Is solo
+                // Solo handling
                 tSeries.Points[thisT].Color = t.OrderType switch
                 {
                     OrderType.BuyToOpen => Color.Red,
@@ -114,16 +110,13 @@ public sealed partial class CharterForm
                     _ => tSeries.Points[thisT].Color
                 };
 
-                // determine tooltip
-                var toolTip = $"Time: {candle.ChartTime:HH:mm tt}{Environment.NewLine}" +
-                              $"--------------------{Environment.NewLine}" +
-                              $"{t.Price} -- {t.OrderType}";
-                tSeries.Points[thisT].ToolTip = toolTip;
+                // Set tooltip
+                tSeries.Points[thisT].ToolTip = $"Time: {candle.ChartTime:HH:mm tt}{Environment.NewLine}--------------------{Environment.NewLine}{t.Price} -- {t.OrderType}";
             }
         }
     }
 
-    public async Task SetChartSize(List<TCandle> candleList)
+    public Task SetChartSize(List<TCandle> candleList)
     {
         var yMin = (double)candleList
             .Select(x => new[] { x.Open, x.Close, x.Low, x.High })
@@ -152,6 +145,7 @@ public sealed partial class CharterForm
         chart2.ChartAreas.First().Name = "Chart2Area";
         chart2.ChartAreas.First().AxisY.LabelStyle.Format = "0";
         chart2.ChartAreas.First().AxisX.LabelStyle.Format = "HH:mm";
+        return Task.CompletedTask;
     }
 
     public void InitialChartConfig()

@@ -2,6 +2,7 @@
 using StonkBot.Data;
 using StonkBotChartoMatic.Services.DbConnService;
 using StonkBotChartoMatic.Services.FileUtilService;
+using StonkBotChartoMatic.Services.FileUtilService.ImportDataParser;
 using StonkBotChartoMatic.Services.MapperService;
 using StonkBotChartoMatic.Services.MapperService.Mappers;
 using System;
@@ -65,6 +66,7 @@ public static class Program
         services.AddTransient<IStonkBotCharterDb, StonkBotDbContext>();
         services.AddTransient<IDbConn, DbConn>();
         services.AddTransient<IFileUtil,  FileUtil>();
+        services.AddTransient<IImportDataParser, ImportDataParser>();
         services.AddTransient<IMapperService, MapperService>();
         services.AddAutoMapper(typeof(SbCharterMapper));
     }

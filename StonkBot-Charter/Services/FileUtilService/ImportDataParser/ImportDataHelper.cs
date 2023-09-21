@@ -1,4 +1,4 @@
-﻿using StonkBotChartoMatic.Services.FileUtilService.Enums;
+﻿/*using StonkBotChartoMatic.Services.FileUtilService.Enums;
 using StonkBotChartoMatic.Services.FileUtilService.Models;
 using System;
 using System.Collections.Generic;
@@ -6,59 +6,26 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
-namespace StonkBotChartoMatic.Services.FileUtilService;
+namespace StonkBotChartoMatic.Services.FileUtilService.ImportDataParser;
 
-public class ImportData
+public class ImportDataHelper
 {
     public List<ImportTransaction> EsTransactions { get; set; } = new();
     public List<ImportTransaction> MesTransactions { get; set; } = new();
     public List<ImportTransaction> NqTransactions { get; set; } = new();
     public List<ImportTransaction> MnqTransactions { get; set; } = new();
 
-    public static ImportData TryParse(string allData)
+    public static ImportDataHelper ProcessEntries(string allData)
     {
-        const string headerRow = "Symbol,Side,Type,Qty,Filled Qty,Limit Price,Stop Price,Avg Fill Price,Take Profit,Stop Loss,Status,Open Time,Close Time,Duration,Commission Fee,Expiration Date,Order ID";
         var esList = new List<ImportTransaction>();
         var mesList = new List<ImportTransaction>();
         var nqList = new List<ImportTransaction>();
         var mnqList = new List<ImportTransaction>();
 
-        var lines = Regex.Split(allData, "\n").ToList();
-        var lineCount = 0;
-        foreach (var line in lines)
+        foreach (var entry in )
         {
             try
             {
-                lineCount++;
-                if (string.IsNullOrWhiteSpace(line))
-                    continue;
-                if (line.Contains(headerRow))
-                    continue;
-
-                var values = line.Split(',');
-                for (var i = 0; i < values.Length; i++)
-                    values[i] = values[i].Replace("\u00a0", "");
-
-                var thisTransaction = new ImportTransaction
-                {
-                    Symbol = values[0],
-                    Side = values[1],
-                    Type = values[2],
-                    Qty = Convert.ToInt32(values[3]),
-                    FilledQty = Convert.ToInt32(values[4]),
-                    LimitPrice = string.IsNullOrEmpty(values[5]) ? decimal.Zero : Convert.ToDecimal(values[5]),
-                    StopPrice = string.IsNullOrEmpty(values[6]) ? decimal.Zero : Convert.ToDecimal(values[6]),
-                    AvgFillPrice = string.IsNullOrEmpty(values[7]) ? decimal.Zero : Convert.ToDecimal(values[7]),
-                    Status = values[10],
-                    OpenTime = Convert.ToDateTime(values[11]),
-                    CloseTime = Convert.ToDateTime(values[12]),
-                    Duration = values[13],
-                    CommissionFee = string.IsNullOrEmpty(values[14]) ? decimal.Zero : Convert.ToDecimal(values[14]),
-                    ExpirationDate = Convert.ToDateTime(values[15]),
-                    OrderId = values[16],
-                    OrderType = null
-                };
-
                 if (thisTransaction.Status == "Cancelled")
                     continue;
 
@@ -160,4 +127,4 @@ public class ImportData
 
         return flatList;
     }
-}
+}*/
