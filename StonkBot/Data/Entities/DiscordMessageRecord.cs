@@ -1,9 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using StonkBot.Data.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace StonkBot.Data.Entities;
 public class DiscordMessageRecord
 {
     [Key] public ulong MessageId { get; set; }
     public string Channel { get; set; } = null!;
-    public DateTime Date { get; set; }
+    public AlertType Type { get; set; } = AlertType.Unknown;
+    public DateTime DateTime { get; set; }
 }

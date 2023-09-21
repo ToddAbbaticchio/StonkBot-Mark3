@@ -3,7 +3,7 @@
 public enum AlertType
 {
     Unknown = 0,
-    
+
     ErLowDate = 1,
     ErHighDate = 2,
     StartAlert1 = 3,
@@ -33,4 +33,6 @@ public enum AlertType
     Volume = 42,
     Volume2 = 43,
     AllDailyAlerts = 49,
+
+    WatchedAlertTable = 100,
 }

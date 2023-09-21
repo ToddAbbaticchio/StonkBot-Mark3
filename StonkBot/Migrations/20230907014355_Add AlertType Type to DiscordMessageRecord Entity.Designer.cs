@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using StonkBot.Data;
 
@@ -10,9 +11,11 @@ using StonkBot.Data;
 namespace StonkBot.Migrations
 {
     [DbContext(typeof(StonkBotDbContext))]
-    partial class StonkBotDbContextModelSnapshot : ModelSnapshot
+    [Migration("20230907014355_Add AlertType Type to DiscordMessageRecord Entity")]
+    partial class AddAlertTypeTypetoDiscordMessageRecordEntity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "7.0.4");

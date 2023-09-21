@@ -61,7 +61,7 @@ public partial class StonkBotDbContext : DbContext, IStonkBotDb
         modelBuilder.Entity<DiscordMessageRecord>(e =>
         {
             e.HasKey(x => x.MessageId);
-            e.HasIndex(x => new { x.Channel, x.Date });
+            e.HasIndex(x => new { x.Channel, x.DateTime });
         });
 
         modelBuilder.Entity<EarningsReport>(e =>

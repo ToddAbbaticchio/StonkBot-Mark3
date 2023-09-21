@@ -13,7 +13,10 @@ namespace StonkBot.Services.DiscordService;
 public interface IDiscordMessager
 {
     Task SendAlertAsync(DiscordChannel channel, string message, CancellationToken cToken);
-    Task SendFileAsync(DiscordChannel channel, List<string>? fileText, DateTime targetDate, CancellationToken cToken);
+    Task SendFileAsync(DiscordChannel channel, List<string> fileText, DateTime targetDate, CancellationToken cToken);
+    Task<List<ulong>> PostTableAsync(DiscordChannel channel, string tableHeading, List<List<string>> bodyData, DateTime targetDate, CancellationToken cToken);
+
+
     Task SendIpoFirstPassAlertsAsync(List<IpoFirstPassAlert> alertList, CancellationToken cToken);
     Task SendIpoSecondPassAlertsAsync(List<IpoSecondPassAlert> alertList, CancellationToken cToken);
 }
@@ -61,14 +64,14 @@ public class DiscordMessager : IDiscordMessager
         await dbMessageRecords.AddAsync(new DiscordMessageRecord
         {
             MessageId = messageId,
-            Date = DateTime.Today.SbDate(),
+            DateTime = DateTime.Today.SbDate(),
             Channel = channel.ToString(),
         }, cToken);
 
         await _db.SbSaveChangesAsync(cToken);
     }
 
-    public async Task SendFileAsync(DiscordChannel channel, List<string>? fileText, DateTime targetDate, CancellationToken cToken)
+    public async Task SendFileAsync(DiscordChannel channel, List<string> fileText, DateTime targetDate, CancellationToken cToken)
     {
         var fName = $"C:/temp/{channel}.csv";
         await File.WriteAllLinesAsync(fName, fileText, cToken);
@@ -81,10 +84,67 @@ public class DiscordMessager : IDiscordMessager
         await dbMessageRecords.AddAsync(new DiscordMessageRecord
         {
             MessageId = messageId,
-            Date = DateTime.Now.SbDate(),
+            DateTime = DateTime.Now.SbDate(),
             Channel = channel.ToString()
         }, cToken);
         await _db.SbSaveChangesAsync(cToken);
+    }
+
+    public async Task<List<ulong>> PostTableAsync(DiscordChannel channel, string tableHeading, List<List<string>> bodyData, DateTime targetDate, CancellationToken cToken)
+    {
+        var sentMessages = new List<ulong>();
+        var webhookUrl = GetWebhookUrl(channel);
+        var client = new DiscordWebhookClient(webhookUrl);
+        ulong messageId;
+
+        // Get max width for each column-to-be
+        var columnCount = bodyData[0].Count;
+        var maxWidths = new List<int>();
+        maxWidths.AddRange(Enumerable.Repeat(0, columnCount));
+        foreach (var row in bodyData)
+        {
+            for (var i = 0; i < row.Count; i++)
+            {
+                var cellLength = row[i].Length;
+                if (cellLength > maxWidths[i])
+                    maxWidths[i] = cellLength;
+            }
+        }
+        
+        // Create raw text table
+        var msgBody = $"```\r\n{tableHeading} - Date: [{targetDate.SbDateString()}]\r\n";
+        foreach (var row in bodyData)
+        {
+            for (var i = 0; i < columnCount; i++)
+            {
+                if (i == 0)
+                {
+                    msgBody += $"{row[i].PadLeft(maxWidths[i])}";
+                }
+                else if (i == columnCount - 1)
+                {
+                    msgBody += $"  |  {row[i].PadLeft(maxWidths[i])}\r\n";
+                }
+                else
+                {
+                    msgBody += $"  |  {row[i].PadLeft(maxWidths[i])}";
+                }
+            }
+
+            if (msgBody.Length > 1800)
+            {
+                msgBody += "```";
+                messageId = await client.SendMessageAsync(msgBody);
+                sentMessages.Add(messageId);
+
+                msgBody = "```\r\n";
+            }
+        }
+        msgBody += "```";
+        messageId = await client.SendMessageAsync(msgBody);
+        sentMessages.Add(messageId);
+
+        return sentMessages;
     }
 
     public async Task SendIpoFirstPassAlertsAsync(List<IpoFirstPassAlert> alertList, CancellationToken cToken)

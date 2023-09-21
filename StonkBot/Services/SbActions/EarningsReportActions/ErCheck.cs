@@ -1,5 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Diagnostics;
+using System.Threading.Channels;
+using Microsoft.EntityFrameworkCore;
 using StonkBot.Data.Entities;
+using StonkBot.Data.Enums;
 using StonkBot.Extensions;
 using StonkBot.MarketPatterns.Models;
 using StonkBot.Services.ConsoleWriter.Enums;
@@ -205,6 +208,33 @@ internal partial class SbAction
                     }
                 }
 
+                // Watched alert table
+                var watchedAlerts = flaggedAlerts.Where(x => x.IsWatched == "WATCHED").ToList();
+                var alreadyPosted = _db.DiscordMessageRecords
+                    .Where(x => x.DateTime == today)
+                    .Any(x => x.Type == AlertType.WatchedAlertTable);
+                
+                if (watchedAlerts.Any() && !alreadyPosted)
+                {
+                    var bodyData = new List<List<string>> { new() { "SYMBOL", "SECTOR", "MESSAGE" } };
+                    watchedAlerts.ForEach(x => bodyData.Add(new List<string>{x.Symbol, x.Sector!, x.Message}));
+
+                    var messages = await _discordClient.PostTableAsync(DiscordChannel.EarningsReport, "Watched Earnings Reports Alerts", bodyData, today, cToken);
+                    if (messages.Any())
+                    {
+                        var messageRecord = new DiscordMessageRecord
+                        {
+                            MessageId = messages.First(),
+                            Channel = DiscordChannel.EarningsReport.ToString(),
+                            DateTime = today,
+                            Type = AlertType.WatchedAlertTable
+                        };
+
+                        await _db.DiscordMessageRecords.AddAsync(messageRecord, cToken);
+                    }
+                }
+                
+                // Big message
                 foreach (var alert in flaggedAlerts)
                 {
                     er.Alerts.Add(alert.GenerateErAlert());

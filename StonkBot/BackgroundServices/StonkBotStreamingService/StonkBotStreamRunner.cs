@@ -56,37 +56,55 @@ public class StonkBotStreamRunner : IStonkBotStreamRunner
                 {
                     case "/NQ":
                     {
-                        var nqDupe = await _db.NqCandles.FindAsync(x.charttime.SbDateTime(), cToken);
-                        if (nqDupe != null)
-                            return;
-
-                        await _db.NqCandles.AddAsync(new NqCandle
+                        try
                         {
-                            ChartTime = x.charttime.SbDateTime(),
-                            Open = x.openprice,
-                            Close = x.closeprice,
-                            Low = x.lowprice,
-                            High = x.highprice,
-                            Volume = x.volume,
-                        }, cToken);
+                            var nqDupe = await _db.NqCandles.FindAsync(x.charttime.SbDateTime(), cToken);
+                            if (nqDupe != null)
+                                break;
+
+                            await _db.NqCandles.AddAsync(new NqCandle
+                            {
+                                ChartTime = x.charttime.SbDateTime(),
+                                Open = x.openprice,
+                                Close = x.closeprice,
+                                Low = x.lowprice,
+                                High = x.highprice,
+                                Volume = x.volume,
+                            }, cToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            var errMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                            _con.WriteLog(MessageSeverity.Error, _logWindow, $"Error saving NqCandle for {x.charttime.SbDateTime()} - {errMsg}");
+                        }
+
                         break;
                     }
-                    
+
                     case "/ES":
                     {
-                        var esDupe = await _db.EsCandles.FindAsync(x.charttime.SbDateTime(), cToken);
-                        if (esDupe != null)
-                            return;
-
-                        await _db.EsCandles.AddAsync( new EsCandle
+                        try
                         {
-                            ChartTime = x.charttime.SbDateTime(),
-                            Open = x.openprice,
-                            Close = x.closeprice,
-                            Low = x.lowprice,
-                            High = x.highprice,
-                            Volume = x.volume,
-                        }, cToken);
+                            var esDupe = await _db.EsCandles.FindAsync(x.charttime.SbDateTime(), cToken);
+                            if (esDupe != null)
+                                return;
+
+                            await _db.EsCandles.AddAsync(new EsCandle
+                            {
+                                ChartTime = x.charttime.SbDateTime(),
+                                Open = x.openprice,
+                                Close = x.closeprice,
+                                Low = x.lowprice,
+                                High = x.highprice,
+                                Volume = x.volume,
+                            }, cToken);
+                        }
+                        catch (Exception ex)
+                        {
+                            var errMsg = ex.InnerException != null ? ex.InnerException.Message : ex.Message;
+                            _con.WriteLog(MessageSeverity.Error, _logWindow, $"Error saving EsCandle for {x.charttime.SbDateTime()} - {errMsg}");
+                        }
+                        
                         break;
                     }
 
@@ -101,7 +119,7 @@ public class StonkBotStreamRunner : IStonkBotStreamRunner
             }
             catch (Exception ex)
             {
-                _con.WriteLog(MessageSeverity.Error, _logWindow, $"Error saving EsCandle for {x.charttime.SbDateTime()} - {ex.Message}");
+                _con.WriteLog(MessageSeverity.Error, _logWindow, $"Error processing ChartSignal for {x.charttime.SbDateTime()} - {ex.Message}");
             }
         };
 

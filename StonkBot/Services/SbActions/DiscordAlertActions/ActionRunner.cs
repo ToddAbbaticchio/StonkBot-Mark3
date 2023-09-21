@@ -29,7 +29,7 @@ internal partial class SbAction
             case AlertType.Volume:
             {
                 var checkVol = await dbMessageRecords
-                    .Where(x => x.Date == targetDate)
+                    .Where(x => x.DateTime == targetDate)
                     .Where(x => x.Channel == DiscordChannel.VolAlert.ToString())
                     .FirstOrDefaultAsync(cToken);
 
@@ -40,7 +40,7 @@ internal partial class SbAction
             case AlertType.Volume2:
             {
                 var checkVol2 = await dbMessageRecords
-                    .Where(x => x.Date == targetDate)
+                    .Where(x => x.DateTime == targetDate)
                     .Where(x => x.Channel == DiscordChannel.VolAlert2.ToString())
                     .FirstOrDefaultAsync(cToken);
 
@@ -51,7 +51,7 @@ internal partial class SbAction
             case AlertType.UpperShadow:
             {
                 var checkUs = await dbMessageRecords
-                    .Where(x => x.Date == targetDate)
+                    .Where(x => x.DateTime == targetDate)
                     .Where(x => x.Channel == DiscordChannel.UpperShadow.ToString())
                     .FirstOrDefaultAsync(cToken);
 
@@ -62,7 +62,7 @@ internal partial class SbAction
             case AlertType.FourHand:
             {
                 var check4H = await dbMessageRecords
-                    .Where(x => x.Date == targetDate)
+                    .Where(x => x.DateTime == targetDate)
                     .Where(x => x.Channel == DiscordChannel.FourHand.ToString())
                     .FirstOrDefaultAsync(cToken);
 
@@ -77,7 +77,7 @@ internal partial class SbAction
                 timer.Start();
                 
                 var todayMessages = await dbMessageRecords
-                    .Where(x => x.Date == targetDate)
+                    .Where(x => x.DateTime == targetDate)
                     .ToListAsync(cToken);
 
                 if (!todayMessages.Any() || todayMessages.All(x => x.Channel != DiscordChannel.VolAlert.ToString()))
