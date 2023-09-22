@@ -1,6 +1,7 @@
 ﻿using HtmlAgilityPack;
 using StonkBot.Data.Entities;
 using StonkBot.Extensions;
+using StonkBot.Options;
 using StonkBot.Services.ConsoleWriter.Enums;
 
 namespace StonkBot.Services.WebScrapeService;
@@ -17,7 +18,7 @@ internal partial class WebScraper
         try
         {
             // scrape page
-            HttpResponseMessage response = await _httpClient.GetAsync(_vars.IpoScrapeUrl, cToken);
+            HttpResponseMessage response = await _httpClient.GetAsync(Constants.IpoScrapeUrl, cToken);
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadAsStringAsync(cToken);
 

@@ -32,7 +32,6 @@ public static class Program
                 .ConfigureServices((hostContext, services) =>
                 {
                     // Shared services
-                    services.AddTransient<SbVars>();
                     services.AddDbContext<IStonkBotDb, StonkBotDbContext>(ServiceLifetime.Transient);
                     services.AddSingleton<IConsoleWriter, ConsoleWriter>();
                     services.AddSingleton<IDiscordMessager, DiscordMessager>();

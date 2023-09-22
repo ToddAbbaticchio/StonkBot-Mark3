@@ -7,12 +7,10 @@ internal partial class WebScraper : IWebScraper
 {
     private readonly IConsoleWriter _con;
     private readonly HttpClient _httpClient;
-    private readonly SbVars _vars;
-
-    public WebScraper(IConsoleWriter con, HttpClient httpClient, SbVars vars)
+    
+    public WebScraper(IConsoleWriter con, HttpClient httpClient)
     {
         _con = con;
         _httpClient = httpClient;
-        _vars = vars;
     }
 }

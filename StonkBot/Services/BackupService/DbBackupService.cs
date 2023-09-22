@@ -17,13 +17,11 @@ internal class DbBackupService : IDbBackupService
 {
     private readonly IConsoleWriter _con;
     private readonly TargetLog _targetLog;
-    private readonly SbVars _vars;
-
-    public DbBackupService(IConsoleWriter con, SbVars vars)
+    
+    public DbBackupService(IConsoleWriter con)
     {
         _con = con;
         _targetLog = TargetLog.ActionRunner;
-        _vars = vars;
     }
 
     public async Task SbBackupChecks(CancellationToken cToken)
@@ -35,7 +33,7 @@ internal class DbBackupService : IDbBackupService
     public async Task BackupDbAsync(CancellationToken cToken)
     {
         // 17:30
-        var backupFileName = $"{_vars.DbBackupFolderPath}\\{DateTime.Today:yyyy-MM-dd}.db";
+        var backupFileName = $"{Constants.DbBackupFolderPath}\\{DateTime.Today:yyyy-MM-dd}.db";
         if (File.Exists(backupFileName))
             return;
 
@@ -43,7 +41,7 @@ internal class DbBackupService : IDbBackupService
         var timer = new Stopwatch();
         timer.Start();
         
-        await using var source = new SQLiteConnection($"Data Source={_vars.LocalDbFilePath};Version=3;");
+        await using var source = new SQLiteConnection($"Data Source={Constants.LocalDbFilePath};Version=3;");
         await using var backup = new SQLiteConnection($"Data Source={backupFileName};Version=3;");
         
         await source.OpenAsync(cToken);
@@ -60,18 +58,18 @@ internal class DbBackupService : IDbBackupService
 
     public Task PurgeAgedBackupsAsync(CancellationToken cToken)
     {
-        var backups = Directory.GetFiles(_vars.DbBackupFolderPath)
+        var backups = Directory.GetFiles(Constants.DbBackupFolderPath)
             .OrderBy(x => x)
             .ToList();
 
-        if (backups.Count <= _vars.MaxDbBackupAge)
+        if (backups.Count <= Constants.MaxDbBackupAge)
             return Task.CompletedTask;
 
         _con.WriteLog(MessageSeverity.Section, _targetLog, "DbBackupService.PurgeAgedBackupsAsync - Starting...");
         var timer = new Stopwatch();
         timer.Start();
 
-        while (backups.Count > _vars.MaxDbBackupAge)
+        while (backups.Count > Constants.MaxDbBackupAge)
         {
             var fName = Path.GetFileName(backups.First());
             _con.WriteLog(MessageSeverity.Info, _targetLog, $"Removing {fName}...");

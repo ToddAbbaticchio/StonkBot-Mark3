@@ -24,16 +24,14 @@ internal partial class SbAction : ISbAction
     private readonly TargetLog _targetLog;
     private readonly IDiscordMessager _discordClient;
     private readonly IMarketPatternMatcher _sbPattern;
-    private readonly SbVars _vars;
-
+    
     public SbAction(
         IStonkBotDb db,
         IConsoleWriter con,
         IWebScraper webScraper,
         ITdaApiClient tdaClient,
         IDiscordMessager discordClient,
-        IMarketPatternMatcher sbPattern,
-        SbVars vars)
+        IMarketPatternMatcher sbPattern)
     {
         _db = db;
         _con = con;
@@ -42,6 +40,5 @@ internal partial class SbAction : ISbAction
         _targetLog = TargetLog.ActionRunner;
         _discordClient = discordClient;
         _sbPattern = sbPattern;
-        _vars = vars;
     }
 }

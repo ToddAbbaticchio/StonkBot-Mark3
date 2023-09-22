@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using StonkBot.Data.Entities;
+using StonkBot.Options;
 using StonkBot.Services.ConsoleWriter.Enums;
 using StonkBot.Services.SbActions._Enums;
 
@@ -60,7 +61,7 @@ internal partial class SbAction
             finally
             {
                 processed++;
-                if (processed % _vars.ProgressTick == 0)
+                if (processed % Constants.ProgressTick == 0)
                     _con.WriteProgress(processed, toProcessCount);
                 if (processed == toProcessCount)
                     _con.WriteProgressComplete("ProcessingComplete!");

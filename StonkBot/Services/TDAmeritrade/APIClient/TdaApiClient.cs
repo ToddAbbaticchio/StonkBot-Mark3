@@ -26,14 +26,12 @@ public class TdaApiClient : ITdaApiClient
     private readonly IConsoleWriter _con;
     private readonly IStonkBotDb _db;
     private readonly TargetLog _logWindow;
-    private readonly SbVars _vars;
-
-    public TdaApiClient(IConsoleWriter con, IStonkBotDb db, SbVars vars)
+    
+    public TdaApiClient(IConsoleWriter con, IStonkBotDb db)
     {
         _con = con;
         _db = db;
         _logWindow = TargetLog.ActionRunner;
-        _vars = vars;
     }
 
     public async Task<string?> GetTokenAsync(bool force, CancellationToken cToken)
@@ -56,9 +54,9 @@ public class TdaApiClient : ITdaApiClient
             RestResponse response;
             try
             {
-                using var client = new RestClient(_vars.TdTokenUrl);
+                using var client = new RestClient(Constants.TdTokenUrl);
                 var request = new RestRequest{ Method = Method.Post };
-                var requestParams = new { grant_type = "refresh_token", dbToken.refresh_token, client_id = _vars.TdAmeritradeClientId };
+                var requestParams = new { grant_type = "refresh_token", dbToken.refresh_token, client_id = Constants.TdAmeritradeClientId };
                 request.AddObject(requestParams);
                 response = await client.ExecuteAsync(request, cToken);
                 if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
@@ -103,7 +101,7 @@ public class TdaApiClient : ITdaApiClient
     {
         try
         {
-            var url = _vars.TdQuoteUrl.Replace("PLACEHOLDER", symbol);
+            var url = Constants.TdQuoteUrl.Replace("PLACEHOLDER", symbol);
 
             for (var i = 1; i <= 3; i++)
             {
@@ -171,7 +169,7 @@ public class TdaApiClient : ITdaApiClient
     {
         try
         {
-            var url = _vars.TdMultiQuoteUrl.Replace("PLACEHOLDER", string.Join("%2C", symbols));
+            var url = Constants.TdMultiQuoteUrl.Replace("PLACEHOLDER", string.Join("%2C", symbols));
 
             for (var i = 1; i <= 3; i++)
             {
@@ -224,7 +222,7 @@ public class TdaApiClient : ITdaApiClient
 
     public async Task<HistoricalDataResponse?> GetHistoricalDataAsync(string symbol, string periodType, string period, string frequencyType, CancellationToken cToken)
     {
-        var url = _vars.TdHistoricalQuoteUrl
+        var url = Constants.TdHistoricalQuoteUrl
             .Replace("SYMBOL", symbol)
             .Replace("PERIODTYPE", periodType)
             .Replace("PERIOD", period)
@@ -317,7 +315,7 @@ public class TdaApiClient : ITdaApiClient
             {
                 var token = await GetTokenAsync(false, cToken);
 
-                using var client = new RestClient(_vars.TdAmeritradeUserPrincipalsUrl);
+                using var client = new RestClient(Constants.TdAmeritradeUserPrincipalsUrl);
                 client.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(token!, "Bearer");
                 var request = new RestRequest() { Method = Method.Get };
                 var response = await client.ExecuteGetAsync(request, cToken);

@@ -1,5 +1,4 @@
-﻿using Discord;
-using Discord.Webhook;
+﻿using Discord.Webhook;
 using Microsoft.EntityFrameworkCore;
 using StonkBot.Data;
 using StonkBot.Data.Entities;
@@ -29,26 +28,24 @@ public class DiscordMessager : IDiscordMessager
     private readonly IConsoleWriter _con;
     private readonly StonkBotDbContext _db;
     private readonly TargetLog _logWindow;
-    private readonly SbVars _vars;
     
-    public DiscordMessager(IConsoleWriter con, StonkBotDbContext db, SbVars vars)
+    public DiscordMessager(IConsoleWriter con, StonkBotDbContext db)
     {
         _con = con;
         _db = db;
         _logWindow = TargetLog.ActionRunner;
-        _vars = vars;
     }
 
     private string GetWebhookUrl(DiscordChannel channel)
     {
         var url = channel switch
         {
-            DiscordChannel.IpoWatch => _vars.IpoWebhook,
-            DiscordChannel.VolAlert => _vars.VolumeAlertWebhook,
-            DiscordChannel.VolAlert2 => _vars.VolumeAlertWebhook,
-            DiscordChannel.UpperShadow => _vars.UpperShadowWebhook,
-            DiscordChannel.FourHand => _vars.FourHandWebhook,
-            DiscordChannel.EarningsReport => _vars.EarningsReportWebhook,
+            DiscordChannel.IpoWatch => Constants.IpoWebhook,
+            DiscordChannel.VolAlert => Constants.VolumeAlertWebhook,
+            DiscordChannel.VolAlert2 => Constants.VolumeAlertWebhook,
+            DiscordChannel.UpperShadow => Constants.UpperShadowWebhook,
+            DiscordChannel.FourHand => Constants.FourHandWebhook,
+            DiscordChannel.EarningsReport => Constants.EarningsReportWebhook,
             _ => ""
         };
 
@@ -155,7 +152,7 @@ public class DiscordMessager : IDiscordMessager
     public async Task SendIpoFirstPassAlertsAsync(List<IpoFirstPassAlert> alertList, CancellationToken cToken)
     {
         var alertDay = (alertList.FirstOrDefault()!).TodayDate;
-        var client = new DiscordWebhookClient(_vars.IpoWebhook);
+        var client = new DiscordWebhookClient(Constants.IpoWebhook);
 
         var alreadyPosted = _db.DiscordMessageRecords
             .Where(x => x.DateTime == alertDay)
@@ -193,7 +190,7 @@ public class DiscordMessager : IDiscordMessager
     {
         var dbIpos = _db.IpoListings;
         var alertDay = (alertList.FirstOrDefault()!).TargetDate;
-        var client = new DiscordWebhookClient(_vars.IpoWebhook);
+        var client = new DiscordWebhookClient(Constants.IpoWebhook);
         var alertedSymbols = alertList
             .Select(x => x.Symbol)
             .ToList();
