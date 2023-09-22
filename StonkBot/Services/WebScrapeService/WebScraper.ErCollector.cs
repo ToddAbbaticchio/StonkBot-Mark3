@@ -50,7 +50,7 @@ internal partial class WebScraper
         {
             var page = await browser.NewPageAsync();
             //await page.SetUserAgentAsync("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/64.0.3282.39 Safari/537.36");
-            await page.GoToAsync(Constants.ErScrapeUrl);
+            await page.GoToAsync(_vars.ErScrapeUrl);
             await page.ClickAsync(changeToWeekView);
             await page.WaitForNetworkIdleAsync();
             while (true)

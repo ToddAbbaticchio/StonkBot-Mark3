@@ -1,5 +1,5 @@
-﻿
-using StonkBot.Extensions.Enums;
+﻿using StonkBot.Extensions.Enums;
+using StonkBot.Options;
 
 namespace StonkBot.Extensions;
 
@@ -10,7 +10,7 @@ public static class MarketExtensions
         if (date.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
             return MarketStatus.ClosedWeekend;
 
-        if (Constants.MarketHolidays.Contains(date.Date))
+        if (MarketHolidays.Dates.Contains(date.Date))
             return MarketStatus.ClosedHoliday;
 
         return MarketStatus.MarketOpen;
@@ -21,7 +21,7 @@ public static class MarketExtensions
         if (dtDate.DayOfWeek is DayOfWeek.Saturday or DayOfWeek.Sunday)
             return MarketStatus.ClosedWeekend;
 
-        if (Constants.MarketHolidays.Contains(dtDate.Date))
+        if (MarketHolidays.Dates.Contains(dtDate.Date))
             return MarketStatus.ClosedHoliday;
 
         return MarketStatus.MarketOpen;

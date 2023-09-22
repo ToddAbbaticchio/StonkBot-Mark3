@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using StonkBot.Data.Entities;
+using StonkBot.Options;
 
 namespace StonkBot.Data;
 
@@ -19,6 +20,7 @@ public interface IStonkBotDb
     public DbSet<WatchedSymbol> WatchedSymbols { get; }
 
     Task SbSaveChangesAsync(CancellationToken cToken);
+    Task<string> IsWatched(string symbol, CancellationToken cToken);
 }
 
 public partial class StonkBotDbContext : DbContext, IStonkBotDb
@@ -36,11 +38,9 @@ public partial class StonkBotDbContext : DbContext, IStonkBotDb
     public DbSet<IpoHData> IpoHData { get; set; } = null!;
     public DbSet<WatchedSymbol> WatchedSymbols { get; set; } = null!;
 
-    public StonkBotDbContext()
+    public StonkBotDbContext(SbVars sbVars)
     {
-        DbPath = File.Exists(Constants.LocalDbFilePath) ?
-            Constants.LocalDbFilePath :
-            Constants.NetworkDbFilePath;
+        DbPath = File.Exists(sbVars.LocalDbFilePath) ? sbVars.LocalDbFilePath : sbVars.NetworkDbFilePath;
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder options) => options.UseSqlite($"Data source={DbPath}");
@@ -129,5 +129,12 @@ public partial class StonkBotDbContext : DbContext, IStonkBotDb
             await SaveChangesAsync(cToken);
             ChangeTracker.Clear();
         }
+    }
+
+    public async Task<string> IsWatched(string symbol, CancellationToken cToken)
+    {
+        return await WatchedSymbols.AnyAsync(x => x.Symbol == symbol, cToken) 
+            ? "WATCHED" 
+            : "";
     }
 }

@@ -42,7 +42,7 @@ public partial class MarketPatternMatcher
                 Sector = erDay.IndustryInfo?.Sector,
                 Industry = erDay.IndustryInfo?.Industry,
                 Category = erDay.IndustryInfo?.Category,
-                IsWatched = await er.IsWatched(),
+                IsWatched = await _db.IsWatched(er.Symbol, cToken),
                 Date = alertDay.Date,
                 Message = ",Jump low - test back 1/2"
             });

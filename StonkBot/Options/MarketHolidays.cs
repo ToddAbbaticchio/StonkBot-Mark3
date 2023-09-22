@@ -1,36 +1,8 @@
-﻿namespace StonkBot;
+﻿namespace StonkBot.Options;
 
-public class Constants
+public class MarketHolidays
 {
-    public const string LocalDbFilePath = @"redacted";
-    public const string NetworkDbFilePath = @"redacted";
-    public const string DbBackupFolderPath = @"redacted";
-    public const int MaxDbBackupAge = 10;
-    
-    public const int ProgressTick = 100;
-    
-    public const string WebullScrapeUrl = "https://www.webull.com/quote/us/ipo?hl=en";
-    public const string ErScrapeUrl = "https://www.tradingview.com/markets/stocks-usa/earnings/";
-    public const string IpoScrapeUrl = "https://www.webull.com/quote/us/ipo?hl=en";
-
-    public const string TDTokenUrl = "https://api.tdameritrade.com/v1/oauth2/token";
-    public const string TDQuoteUrl = "https://api.tdameritrade.com/v1/marketdata/PLACEHOLDER/quotes";
-    public const string TDMultiQuoteUrl = "https://api.tdameritrade.com/v1/marketdata/quotes?symbol=PLACEHOLDER";
-    public const string TDHistoricalQuoteUrl = "https://api.tdameritrade.com/v1/marketdata/SYMBOL/pricehistory?periodType=PERIODTYPE&period=PERIOD&frequencyType=FREQUENCYTYPE&frequency=1";
-    public const string TDAmeritradeUserPrincipalsUrl = "https://api.tdameritrade.com/v1/userprincipals?fields=streamerSubscriptionKeys,streamerConnectionInfo";
-    public const string TDAmeritradeClientId = "redacted";
-
-    public const string VolumeAlertWebhook = "redacted";
-    public const string UpperShadowWebhook = "redacted";
-    public const string FourHandWebhook = "redacted";
-    public const string IpoWebhook = "redacted";
-    public const string EarningsReportWebhook = "redacted";
-
-    public const string TDRedirectUrl = "https://localhost:8080/";
-    public const string TDAmeritradeBaseUrl = "https://api.tdameritrade.com/v1";
-    public const string TDAmeritradeTokenPath = "oauth2/token";
-    
-    public static readonly List<DateTime> MarketHolidays = new()
+    public static readonly List<DateTime> Dates = new()
     {
         new DateTime(2022, 1, 17, 0, 0, 0),
         new DateTime(2022, 2, 21, 0, 0, 0),

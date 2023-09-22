@@ -56,7 +56,7 @@ public partial class MarketPatternMatcher
                     Sector = erDay.IndustryInfo?.Sector,
                     Industry = erDay.IndustryInfo?.Industry,
                     Category = erDay.IndustryInfo?.Category,
-                    IsWatched = await er.IsWatched(),
+                    IsWatched = await _db.IsWatched(er.Symbol, cToken),
                     Date = alertDay.Date,
                     Message = "SURE,1st negative start alert"
                 });
@@ -99,7 +99,7 @@ public partial class MarketPatternMatcher
                     Sector = erDay.IndustryInfo?.Sector,
                     Industry = erDay.IndustryInfo?.Industry,
                     Category = erDay.IndustryInfo?.Category,
-                    IsWatched = await er.IsWatched(),
+                    IsWatched = await _db.IsWatched(er.Symbol, cToken),
                     Date = alertDay.Date,
                     Message = "SURE,2nd negative start alert"
                 });
