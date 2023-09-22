@@ -26,6 +26,7 @@ public interface IStonkBotDb
 public partial class StonkBotDbContext : DbContext, IStonkBotDb
 {
     public string DbPath { get; }
+
     public DbSet<AuthToken> AuthTokens { get; set; } = null!;
     public DbSet<EsCandle> EsCandles { get; set; } = null!;
     public DbSet<NqCandle> NqCandles { get; set; } = null!;
@@ -38,9 +39,12 @@ public partial class StonkBotDbContext : DbContext, IStonkBotDb
     public DbSet<IpoHData> IpoHData { get; set; } = null!;
     public DbSet<WatchedSymbol> WatchedSymbols { get; set; } = null!;
 
-    public StonkBotDbContext(SbVars sbVars)
+    public StonkBotDbContext()
     {
-        DbPath = File.Exists(sbVars.LocalDbFilePath) ? sbVars.LocalDbFilePath : sbVars.NetworkDbFilePath;
+        const string local = Constants.LocalDbFilePath;
+        const string network = Constants.NetworkDbFilePath;
+        
+        DbPath = File.Exists(local) ? local : network;
     }
     
     protected override void OnConfiguring(DbContextOptionsBuilder options) => options.UseSqlite($"Data source={DbPath}");
