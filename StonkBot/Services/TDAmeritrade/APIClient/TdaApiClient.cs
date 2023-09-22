@@ -1,5 +1,4 @@
-﻿using System.Net;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Authenticators.OAuth2;
@@ -8,6 +7,8 @@ using StonkBot.Services.ConsoleWriter;
 using StonkBot.Services.ConsoleWriter.Enums;
 using StonkBot.Services.TDAmeritrade._SharedModels;
 using StonkBot.Services.TDAmeritrade.APIClient.Models;
+using System.Net;
+using StonkBot.Options;
 
 namespace StonkBot.Services.TDAmeritrade.APIClient;
 
@@ -25,12 +26,14 @@ public class TdaApiClient : ITdaApiClient
     private readonly IConsoleWriter _con;
     private readonly IStonkBotDb _db;
     private readonly TargetLog _logWindow;
+    private readonly SbVars _vars;
 
-    public TdaApiClient(IConsoleWriter con, IStonkBotDb db)
+    public TdaApiClient(IConsoleWriter con, IStonkBotDb db, SbVars vars)
     {
         _con = con;
         _db = db;
         _logWindow = TargetLog.ActionRunner;
+        _vars = vars;
     }
 
     public async Task<string?> GetTokenAsync(bool force, CancellationToken cToken)
@@ -53,9 +56,9 @@ public class TdaApiClient : ITdaApiClient
             RestResponse response;
             try
             {
-                using var client = new RestClient(Constants.TDTokenUrl);
-                var request = new RestRequest() { Method = Method.Post };
-                var requestParams = new { grant_type = "refresh_token", dbToken.refresh_token, client_id = Constants.TDAmeritradeClientId };
+                using var client = new RestClient(_vars.TdTokenUrl);
+                var request = new RestRequest{ Method = Method.Post };
+                var requestParams = new { grant_type = "refresh_token", dbToken.refresh_token, client_id = _vars.TdAmeritradeClientId };
                 request.AddObject(requestParams);
                 response = await client.ExecuteAsync(request, cToken);
                 if (!response.IsSuccessful || string.IsNullOrEmpty(response.Content))
@@ -100,7 +103,7 @@ public class TdaApiClient : ITdaApiClient
     {
         try
         {
-            var url = Constants.TDQuoteUrl.Replace("PLACEHOLDER", symbol);
+            var url = _vars.TdQuoteUrl.Replace("PLACEHOLDER", symbol);
 
             for (var i = 1; i <= 3; i++)
             {
@@ -168,7 +171,7 @@ public class TdaApiClient : ITdaApiClient
     {
         try
         {
-            var url = Constants.TDMultiQuoteUrl.Replace("PLACEHOLDER", string.Join("%2C", symbols));
+            var url = _vars.TdMultiQuoteUrl.Replace("PLACEHOLDER", string.Join("%2C", symbols));
 
             for (var i = 1; i <= 3; i++)
             {
@@ -221,7 +224,7 @@ public class TdaApiClient : ITdaApiClient
 
     public async Task<HistoricalDataResponse?> GetHistoricalDataAsync(string symbol, string periodType, string period, string frequencyType, CancellationToken cToken)
     {
-        var url = Constants.TDHistoricalQuoteUrl
+        var url = _vars.TdHistoricalQuoteUrl
             .Replace("SYMBOL", symbol)
             .Replace("PERIODTYPE", periodType)
             .Replace("PERIOD", period)
@@ -314,7 +317,7 @@ public class TdaApiClient : ITdaApiClient
             {
                 var token = await GetTokenAsync(false, cToken);
 
-                using var client = new RestClient(Constants.TDAmeritradeUserPrincipalsUrl);
+                using var client = new RestClient(_vars.TdAmeritradeUserPrincipalsUrl);
                 client.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(token!, "Bearer");
                 var request = new RestRequest() { Method = Method.Get };
                 var response = await client.ExecuteGetAsync(request, cToken);

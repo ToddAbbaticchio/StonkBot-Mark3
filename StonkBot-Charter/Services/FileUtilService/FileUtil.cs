@@ -1,8 +1,9 @@
 ﻿using StonkBot.Data;
 using StonkBot.Data.Enums;
 using StonkBot.Extensions;
-using StonkBotChartoMatic.Charter;
 using StonkBotChartoMatic.Services.FileUtilService.Enums;
+using StonkBotChartoMatic.Services.FileUtilService.Extensions;
+using StonkBotChartoMatic.Services.FileUtilService.ImportDataParser;
 using StonkBotChartoMatic.Services.FileUtilService.Models;
 using StonkBotChartoMatic.Services.MapperService;
 using System;
@@ -25,27 +26,27 @@ public class FileUtil : IFileUtil
 {
     private readonly IStonkBotCharterDb _db;
     private readonly IMapperService _mapper;
+    private readonly IImportDataParser _importDataParser;
 
-    public FileUtil(IStonkBotCharterDb db, IMapperService mapper)
+    public FileUtil(IStonkBotCharterDb db, IMapperService mapper, IImportDataParser importDataParser)
     {
         _db = db;
         _mapper = mapper;
+        _importDataParser = importDataParser;
     }
 
     public async Task<List<TCandle>> Import(string filePath, DateTime selectedDate, SbCharterMarket selectedMarket, CancellationToken cToken)
     {
-        // Read file (bypass filelock from main form) and trim cancelled orders
-        await using var fileStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
-        using var streamReader = new StreamReader(fileStream, Encoding.Default);
-        var csvData = await streamReader.ReadToEndAsync(cToken);
-        var importData = ImportData.TryParse(csvData);
-        var transactionList = importData.GetFullList(selectedDate);
+        if (!_importDataParser.TryParseCsv(filePath, out var importData))
+            throw new Exception($"Unable to parse provided .csv file: {filePath}");
+
+        var transactionList = importData!.GetFullList();
 
         // make file for lazybutt Dan
         try
         {
             var fileName = $"Summary - {selectedDate:MMddyyyy}.csv";
-            var outputFileData = await GetOutputFileData(importData, selectedDate, cToken);
+            var outputFileData = await GetOutputFileData(importData!, selectedDate, cToken);
             await File.WriteAllLinesAsync($"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}\\{fileName}", outputFileData, Encoding.UTF8, cToken);
         }
         catch (Exception ex)
@@ -66,7 +67,7 @@ public class FileUtil : IFileUtil
         }
         if (!tCandleList.Any())
             throw new Exception("Ahhhhhhh! No transactions!");
-        
+
 
         // Insert transaction data into TCandles
         foreach (var t in transactionList)
@@ -97,12 +98,12 @@ public class FileUtil : IFileUtil
         return tCandleList;
     }
 
-    private async Task<List<string>> GetOutputFileData(ImportData importData, DateTime selectedDate, CancellationToken cToken)
+    private Task<List<string>> GetOutputFileData(ImportData importData, DateTime selectedDate, CancellationToken cToken)
     {
         const string headerRow = "Symbol,Date,Day,Long or Short,Start Time,End Time,Time Frame,Enter Price,Close Price,Order Count,Close Count,Profit,Hold Time,Order Type,Reason(承接？追单？理由？技巧？市场价 还是limie order,,,ToOpenId,ToCloseId)";
         var toWrite = new List<string> { headerRow };
         decimal profitSum = 0;
-        
+
         // Process ES transactions
         if (importData.EsTransactions.Any())
         {
@@ -206,6 +207,6 @@ public class FileUtil : IFileUtil
         var message = profitSum > 0 ? "»-(¯`·.·´¯)-> $$$ <-(¯`·.·´¯)-«" : "(╯°□°)╯︵ ┻━┻";
         toWrite.Add($",,,,,,,,,,Total:,{profitSum},,{message},");
 
-        return toWrite;
+        return Task.FromResult(toWrite);
     }
 }

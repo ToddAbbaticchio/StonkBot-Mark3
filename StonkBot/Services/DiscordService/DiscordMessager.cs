@@ -1,8 +1,11 @@
-﻿using Discord.Webhook;
+﻿using Discord;
+using Discord.Webhook;
 using Microsoft.EntityFrameworkCore;
 using StonkBot.Data;
 using StonkBot.Data.Entities;
+using StonkBot.Data.Enums;
 using StonkBot.Extensions;
+using StonkBot.Options;
 using StonkBot.Services.ConsoleWriter;
 using StonkBot.Services.ConsoleWriter.Enums;
 using StonkBot.Services.DiscordService.Enums;
@@ -26,24 +29,26 @@ public class DiscordMessager : IDiscordMessager
     private readonly IConsoleWriter _con;
     private readonly StonkBotDbContext _db;
     private readonly TargetLog _logWindow;
+    private readonly SbVars _vars;
     
-    public DiscordMessager(IConsoleWriter con, StonkBotDbContext db)
+    public DiscordMessager(IConsoleWriter con, StonkBotDbContext db, SbVars vars)
     {
         _con = con;
         _db = db;
         _logWindow = TargetLog.ActionRunner;
+        _vars = vars;
     }
 
     private string GetWebhookUrl(DiscordChannel channel)
     {
         var url = channel switch
         {
-            DiscordChannel.IpoWatch => Constants.IpoWebhook,
-            DiscordChannel.VolAlert => Constants.VolumeAlertWebhook,
-            DiscordChannel.VolAlert2 => Constants.VolumeAlertWebhook,
-            DiscordChannel.UpperShadow => Constants.UpperShadowWebhook,
-            DiscordChannel.FourHand => Constants.FourHandWebhook,
-            DiscordChannel.EarningsReport => Constants.EarningsReportWebhook,
+            DiscordChannel.IpoWatch => _vars.IpoWebhook,
+            DiscordChannel.VolAlert => _vars.VolumeAlertWebhook,
+            DiscordChannel.VolAlert2 => _vars.VolumeAlertWebhook,
+            DiscordChannel.UpperShadow => _vars.UpperShadowWebhook,
+            DiscordChannel.FourHand => _vars.FourHandWebhook,
+            DiscordChannel.EarningsReport => _vars.EarningsReportWebhook,
             _ => ""
         };
 
@@ -149,30 +154,38 @@ public class DiscordMessager : IDiscordMessager
 
     public async Task SendIpoFirstPassAlertsAsync(List<IpoFirstPassAlert> alertList, CancellationToken cToken)
     {
-        var dbIpos = _db.IpoListings;
         var alertDay = (alertList.FirstOrDefault()!).TodayDate;
-        var client = new DiscordWebhookClient(Constants.IpoWebhook);
+        var client = new DiscordWebhookClient(_vars.IpoWebhook);
+
+        var alreadyPosted = _db.DiscordMessageRecords
+            .Where(x => x.DateTime == alertDay)
+            .Any(x => x.Type == AlertType.IpoFirstPassTable);
+        if (alreadyPosted)
+            return;
+        
         var alertedSymbols = alertList
             .Select(x => x.Symbol)
             .ToList();
 
-        var f1MaxLen = alertList.Select(x => x.TodayClose).MaxBy(x => x.Length)!.Length;
-        var f2MaxLen = alertList.Select(x => x.OpeningHigh).MaxBy(x => x.Length)!.Length;
+        var bodyData = new List<List<string>> { new() { "SYMBOL", "DAYS SATISFIED", "TODAY CLOSE", "OPENING DAY HIGH" } };
+        alertList.ForEach(x => bodyData.Add(new List<string> { x.Symbol, x.DaysSatisfied.ToString(), x.TodayClose, x.OpeningHigh }));
+        var messages = await PostTableAsync(DiscordChannel.IpoWatch, "IPO Alerts 1stPass", bodyData, alertDay, cToken);
+        if (!messages.Any())
+            return;
 
-        var msgBody = $"```\r\nIPO Alerts 1stPass - Date: [{alertDay.SbDateString()}]\r\n";
-        alertList.ForEach(x => msgBody += 
-            $"{x.Symbol,5}" +
-            $"  |  Days Satisfied: [{x.DaysSatisfied,3}]" +
-            $"  |  TodayClose:[{x.TodayClose.PadLeft(f1MaxLen)}]" +
-            $"  |  OpeningDayHigh:[{x.OpeningHigh.PadLeft(f2MaxLen)}]\r\n");
-        msgBody += "```";
-
-        await client.SendMessageAsync(msgBody);
-        await dbIpos
+        var messageRecord = new DiscordMessageRecord
+        {
+            MessageId = messages.First(),
+            Channel = DiscordChannel.IpoWatch.ToString(),
+            DateTime = alertDay,
+            Type = AlertType.IpoFirstPassTable
+        };
+        await _db.DiscordMessageRecords.AddAsync(messageRecord, cToken);
+        
+        await _db.IpoListings
             .Where(x => alertedSymbols.Contains(x.Symbol))
             .ExecuteUpdateAsync(x => x.SetProperty(p => p.FirstPassDate, p => alertDay), cToken);
         await _db.SbSaveChangesAsync(cToken);
-
         alertedSymbols.ForEach(x => _con.WriteLog(MessageSeverity.Info, _logWindow, $"Added 'FirstPass' discordMessageRecords for watched Ipo:{x}"));
     }
 
@@ -180,7 +193,7 @@ public class DiscordMessager : IDiscordMessager
     {
         var dbIpos = _db.IpoListings;
         var alertDay = (alertList.FirstOrDefault()!).TargetDate;
-        var client = new DiscordWebhookClient(Constants.IpoWebhook);
+        var client = new DiscordWebhookClient(_vars.IpoWebhook);
         var alertedSymbols = alertList
             .Select(x => x.Symbol)
             .ToList();

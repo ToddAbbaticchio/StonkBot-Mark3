@@ -5,6 +5,7 @@ using StonkBot.BackgroundServices.StonkBotActionService;
 using StonkBot.BackgroundServices.StonkBotStreamingService;
 using StonkBot.Data;
 using StonkBot.MarketPatterns;
+using StonkBot.Options;
 using StonkBot.Services.BackupService;
 using StonkBot.Services.ConnectionCheck;
 using StonkBot.Services.ConsoleWriter;
@@ -31,6 +32,7 @@ public static class Program
                 .ConfigureServices((hostContext, services) =>
                 {
                     // Shared services
+                    services.AddTransient<SbVars>();
                     services.AddDbContext<IStonkBotDb, StonkBotDbContext>(ServiceLifetime.Transient);
                     services.AddSingleton<IConsoleWriter, ConsoleWriter>();
                     services.AddSingleton<IDiscordMessager, DiscordMessager>();

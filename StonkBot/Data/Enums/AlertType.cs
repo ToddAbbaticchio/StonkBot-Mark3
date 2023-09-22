@@ -35,4 +35,5 @@ public enum AlertType
     AllDailyAlerts = 49,
 
     WatchedAlertTable = 100,
+    IpoFirstPassTable = 101,
 }

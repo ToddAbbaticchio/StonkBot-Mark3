@@ -1,5 +1,6 @@
 ﻿using StonkBot.Data;
 using StonkBot.MarketPatterns;
+using StonkBot.Options;
 using StonkBot.Services.ConsoleWriter;
 using StonkBot.Services.ConsoleWriter.Enums;
 using StonkBot.Services.DiscordService;
@@ -23,6 +24,7 @@ internal partial class SbAction : ISbAction
     private readonly TargetLog _targetLog;
     private readonly IDiscordMessager _discordClient;
     private readonly IMarketPatternMatcher _sbPattern;
+    private readonly SbVars _vars;
 
     public SbAction(
         IStonkBotDb db,
@@ -30,7 +32,8 @@ internal partial class SbAction : ISbAction
         IWebScraper webScraper,
         ITdaApiClient tdaClient,
         IDiscordMessager discordClient,
-        IMarketPatternMatcher sbPattern)
+        IMarketPatternMatcher sbPattern,
+        SbVars vars)
     {
         _db = db;
         _con = con;
@@ -39,5 +42,6 @@ internal partial class SbAction : ISbAction
         _targetLog = TargetLog.ActionRunner;
         _discordClient = discordClient;
         _sbPattern = sbPattern;
+        _vars = vars;
     }
 }

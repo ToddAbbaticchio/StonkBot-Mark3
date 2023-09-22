@@ -31,7 +31,7 @@ public static class DataExtensions
         return table;
     }
 
-    public static List<ImportTransaction> GetFullList(this ImportData input, DateTime selectedDate)
+    /*public static List<ImportTransaction> GetFullList(this ImportData input, DateTime selectedDate)
     {
         var transactionList = new List<ImportTransaction>();
         
@@ -50,5 +50,5 @@ public static class DataExtensions
             .ToList());
 
         return transactionList;
-    }
+    }*/
 }

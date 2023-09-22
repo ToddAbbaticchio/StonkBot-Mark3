@@ -1,7 +1,8 @@
-﻿using StonkBot.Services.ConsoleWriter.Enums;
+﻿using StonkBot.Services.ConsoleWriter;
+using StonkBot.Services.ConsoleWriter.Enums;
 using System.Data.SQLite;
 using System.Diagnostics;
-using StonkBot.Services.ConsoleWriter;
+using StonkBot.Options;
 
 namespace StonkBot.Services.BackupService;
 
@@ -16,11 +17,13 @@ internal class DbBackupService : IDbBackupService
 {
     private readonly IConsoleWriter _con;
     private readonly TargetLog _targetLog;
+    private readonly SbVars _vars;
 
-    public DbBackupService(IConsoleWriter con)
+    public DbBackupService(IConsoleWriter con, SbVars vars)
     {
         _con = con;
         _targetLog = TargetLog.ActionRunner;
+        _vars = vars;
     }
 
     public async Task SbBackupChecks(CancellationToken cToken)
@@ -32,7 +35,7 @@ internal class DbBackupService : IDbBackupService
     public async Task BackupDbAsync(CancellationToken cToken)
     {
         // 17:30
-        var backupFileName = $"{Constants.DbBackupFolderPath}\\{DateTime.Today:yyyy-MM-dd}.db";
+        var backupFileName = $"{_vars.DbBackupFolderPath}\\{DateTime.Today:yyyy-MM-dd}.db";
         if (File.Exists(backupFileName))
             return;
 
@@ -40,7 +43,7 @@ internal class DbBackupService : IDbBackupService
         var timer = new Stopwatch();
         timer.Start();
         
-        await using var source = new SQLiteConnection($"Data Source={Constants.LocalDbFilePath};Version=3;");
+        await using var source = new SQLiteConnection($"Data Source={_vars.LocalDbFilePath};Version=3;");
         await using var backup = new SQLiteConnection($"Data Source={backupFileName};Version=3;");
         
         await source.OpenAsync(cToken);
@@ -55,20 +58,20 @@ internal class DbBackupService : IDbBackupService
         _con.WriteLog(MessageSeverity.Stats, _targetLog, "DbBackupService.BackupDbAsync complete!");
     }
 
-    public async Task PurgeAgedBackupsAsync(CancellationToken cToken)
+    public Task PurgeAgedBackupsAsync(CancellationToken cToken)
     {
-        var backups = Directory.GetFiles(Constants.DbBackupFolderPath)
+        var backups = Directory.GetFiles(_vars.DbBackupFolderPath)
             .OrderBy(x => x)
             .ToList();
 
-        if (backups.Count <= Constants.MaxDbBackupAge)
-            return;
+        if (backups.Count <= _vars.MaxDbBackupAge)
+            return Task.CompletedTask;
 
         _con.WriteLog(MessageSeverity.Section, _targetLog, "DbBackupService.PurgeAgedBackupsAsync - Starting...");
         var timer = new Stopwatch();
         timer.Start();
 
-        while (backups.Count > Constants.MaxDbBackupAge)
+        while (backups.Count > _vars.MaxDbBackupAge)
         {
             var fName = Path.GetFileName(backups.First());
             _con.WriteLog(MessageSeverity.Info, _targetLog, $"Removing {fName}...");
@@ -79,5 +82,6 @@ internal class DbBackupService : IDbBackupService
         timer.Stop();
         _con.WriteLog(MessageSeverity.Info, _targetLog, $"Elapsed time: [{timer.Elapsed}]");
         _con.WriteLog(MessageSeverity.Stats, _targetLog, "DbBackupService.PurgeAgedBackupsAsync complete!");
+        return Task.CompletedTask;
     }
 }
