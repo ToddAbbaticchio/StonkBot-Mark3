@@ -42,7 +42,7 @@ public partial class MarketPatternMatcher
             Category = erDay.IndustryInfo?.Category,
             IsWatched = await _db.IsWatched(er.Symbol, cToken),
             Date = alertDay.Date,
-            Message = $"SURE,Reached ErDate's high! [{erDay.Date.SbDateString()}] {erDay.High}"
+            Message = $"SURE - Reached ErDate's high! [{erDay.Date.SbDateString()}] {erDay.High}"
         });
 
         return newAlerts;

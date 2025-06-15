@@ -22,7 +22,7 @@ internal partial class SbAction
                 .Where(x => x.CalculatedFields == null || string.IsNullOrEmpty(x.CalculatedFields.FiveDayStable))
                 .ToListAsync(cToken);
 
-        if (!toProcess.Any())
+        if (toProcess.Count == 0)
             return;
 
         _con.WriteLog(MessageSeverity.Info, TargetLog.ActionRunner, $"Processing DB entries missing '{field}' field...");

@@ -1,4 +1,5 @@
-﻿using StonkBot.Data.Enums;
+﻿using StonkBot.Data;
+using StonkBot.Data.Enums;
 using StonkBotChartoMatic.Charter;
 using StonkBotChartoMatic.Charter.Extensions;
 using StonkBotChartoMatic.Services.DbConnService;
@@ -20,7 +21,8 @@ namespace StonkBotChartoMatic;
 [SupportedOSPlatform("windows10.0.17763.0")]
 public sealed partial class CharterForm
 {
-    private readonly IDbConn _dbConn;
+    //private readonly IDbConn _dbConn;
+    private readonly IStonkBotCharterDb _db;
     private readonly IFileUtil _fileUtil;
     private readonly CancellationToken cToken = new CancellationTokenSource().Token;
     public DateTime selectedDate;
@@ -30,9 +32,9 @@ public sealed partial class CharterForm
 
     public DroppedFileMode droppedFileMode;
 
-    public CharterForm(IDbConn dbConn, IFileUtil fileUtil)
+    public CharterForm(IStonkBotCharterDb db, IFileUtil fileUtil)
     {
-        _dbConn = dbConn;
+        _db = db;
         _fileUtil = fileUtil;
         
         InitializeComponent();
@@ -258,15 +260,15 @@ public sealed partial class CharterForm
 
     private async void UpdateButton_Click(object sender, EventArgs e)
     {
-        List<DataTableRowV1> candleList;
         switch (ChartTypeDrop.SelectedValue)
         {
             // Handling for ES Candle Charts
             case SBChart.ESCandle:
                 if (string.IsNullOrEmpty(droppedFilePath))
                 {
-                    dataTable = await _dbConn.esCandleQuery(selectedDate, (SbCharterMarket)MarketDrop.SelectedValue!, cToken);
-                    candleList = CandleResizer.SetSize(dataTable, selectedCandleLen);
+                    var candleList = await _db.GetEsCandles(selectedDate, (SbCharterMarket)MarketDrop.SelectedValue!, cToken);
+                    await DrawCandleChart(candleList, cToken);
+                    //candleList = CandleResizer.SetSize(dataTable, selectedCandleLen);
                     //await _chartUtil.DrawCandleChart(candleList, dataTable, chart1, chart2, cToken);
                     break;
                 }
@@ -280,22 +282,22 @@ public sealed partial class CharterForm
             // Handling for FluxValue Charts
             case SBChart.FluxValue:
                 chart1.Annotations.Clear();
-                dataTable = await _dbConn.historyESQuery(selectedDate, 10, cToken);
+                //dataTable = await _dbConn.historyESQuery(selectedDate, 10, cToken);
                 //await _chartUtil.DrawFluxValueChart(dataTable, chart1, cToken);
                 break;
 
             // Handling for ES High/Low Charts
             case SBChart.ESHighLow:
                 chart1.Annotations.Clear();
-                dataTable = await _dbConn.historyESQuery(selectedDate, 10, cToken);
+                //dataTable = await _dbConn.historyESQuery(selectedDate, 10, cToken);
                 //await _chartUtil.DrawESHighLowChart(dataTable, chart1, cToken);
                 break;
 
             // Handling for multi day zone chart
             case SBChart.TargetZone:
                 chart1.Annotations.Clear();
-                dataTable = await _dbConn.targetZoneQuery(selectedDate, 3, cToken);
-                candleList = CandleResizer.SetSize(dataTable, selectedCandleLen);
+                //dataTable = await _dbConn.targetZoneQuery(selectedDate, 3, cToken);
+                //candleList = CandleResizer.SetSize(dataTable, selectedCandleLen);
                 //await _chartUtil.DrawTargetZoneCandleChart(candleList, dataTable, chart1, TextField, cToken);
                 break;
         }

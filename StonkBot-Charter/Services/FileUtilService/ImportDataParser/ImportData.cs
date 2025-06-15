@@ -26,13 +26,13 @@ public class ImportData
                 MnqTransactions.Add(t);
         }
 
-        if (EsTransactions.Any())
+        if (EsTransactions.Count != 0)
             EsTransactions = DetermineOrderTypes(EsTransactions);
-        if (MesTransactions.Any())
+        if (MesTransactions.Count != 0)
             MesTransactions = DetermineOrderTypes(MesTransactions);
-        if (NqTransactions.Any())
+        if (NqTransactions.Count != 0)
             NqTransactions = DetermineOrderTypes(NqTransactions);
-        if (MnqTransactions.Any())
+        if (MnqTransactions.Count != 0)
             MnqTransactions = DetermineOrderTypes(MnqTransactions);
     }
 

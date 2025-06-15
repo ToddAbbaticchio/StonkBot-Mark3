@@ -15,9 +15,6 @@ public partial class MarketPatternMatcher
     public async Task<List<AlertData>> HighDayCheck(EarningsReport er, HistoricalData erDay, List<HistoricalData> checkRange, CancellationToken cToken)
     {
         var newAlerts = new List<AlertData>();
-        
-        if (er.Alerts.Any(x => x.Type == $"{AlertType.ErHighDate}"))
-            return newAlerts;
 
         var alertDay = checkRange
             .Where(x => x.Date > erDay.Date)
@@ -36,7 +33,7 @@ public partial class MarketPatternMatcher
             Category = erDay.IndustryInfo?.Category,
             IsWatched = await _db.IsWatched(er.Symbol, cToken),
             Date = alertDay.Date,
-            Message = $",Reached ErDate's high! [{erDay.Date.SbDateString()}] {erDay.High}"
+            Message = $"Reached ErDate's high! [{erDay.Date.SbDateString()}] {erDay.High}"
         });
 
         return newAlerts;

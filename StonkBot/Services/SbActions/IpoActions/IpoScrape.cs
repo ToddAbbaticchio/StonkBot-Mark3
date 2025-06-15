@@ -22,7 +22,7 @@ internal partial class SbAction
             var dbIpos = _db.IpoListings;
 
             var scrapedList = await _webScraper.ScrapeIpoData(cToken);
-            if (!scrapedList.Any())
+            if (scrapedList.Count == 0)
             {
                 _con.WriteLog(MessageSeverity.Warning, "IpoScrape returned nothing. Is a Problem?");
                 return;
@@ -62,7 +62,7 @@ internal partial class SbAction
             if (dbChanged)
                 await _db.SbSaveChangesAsync(cToken);
 
-            if (logList.Any())
+            if (logList.Count != 0)
                 logList.ForEach(logEntry => _con.WriteLog(logEntry));
         }
         catch (Exception ex)

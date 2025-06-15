@@ -15,6 +15,9 @@ public partial class MarketPatternMatcher
     public async Task<List<AlertData>> JumpLowCheck(EarningsReport er, HistoricalData erDay, HistoricalData erDayAfter, List<HistoricalData> checkRange, CancellationToken cToken)
     {
         var newAlerts = new List<AlertData>();
+        if (er.Alerts.Any(x => x.Type == $"{AlertType.JumpLowAlert}"))
+            return newAlerts;
+
         var prevJumpLowAlertDates = er.Alerts
             .Where(x => x.Symbol == er.Symbol)
             .Where(x => x.Type == $"{AlertType.JumpLowAlert}")
@@ -27,7 +30,9 @@ public partial class MarketPatternMatcher
             .ToList();
         var newJumpLowAlerts = jumpLowDates
             .Where(x => !prevJumpLowAlertDates.Contains(x.Date))
+            .OrderBy(x => x.Date)
             .ToList();
+        
         foreach (var alertDay in newJumpLowAlerts)
         {
             newAlerts.Add(new AlertData
@@ -39,8 +44,10 @@ public partial class MarketPatternMatcher
                 Category = erDay.IndustryInfo?.Category,
                 IsWatched = await _db.IsWatched(er.Symbol, cToken),
                 Date = alertDay.Date,
-                Message = ",Jump low - reach er day's high"
+                Message = "Jump low - reach er day's high"
             });
+
+            break;
         }
 
         return newAlerts;

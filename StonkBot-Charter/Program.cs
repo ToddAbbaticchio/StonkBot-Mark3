@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using RestSharp;
 using StonkBot.Data;
 using StonkBotChartoMatic.Services.DbConnService;
 using StonkBotChartoMatic.Services.FileUtilService;
@@ -6,6 +8,8 @@ using StonkBotChartoMatic.Services.FileUtilService.ImportDataParser;
 using StonkBotChartoMatic.Services.MapperService;
 using StonkBotChartoMatic.Services.MapperService.Mappers;
 using System;
+using System.IO;
+using System.Reflection;
 using System.Runtime.Versioning;
 using System.Threading;
 using System.Threading.Tasks;
@@ -62,6 +66,20 @@ public static class Program
 
     private static void ConfigureServices(IServiceCollection services)
     {
+        var assembly = Assembly.GetExecutingAssembly();
+        using var stream = assembly.GetManifestResourceStream("appsettings.json");
+        if (stream == null)
+            throw new FileNotFoundException("Could not find appsettings.json embedded resource");
+        
+        using var reader = new StreamReader(stream);
+        var fileContents = reader.ReadToEnd();
+        var configuration = new ConfigurationBuilder()
+              .AddJsonStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(fileContents)))
+              .Build();
+
+        services.AddSingleton<IConfiguration>(configuration);
+        services.Configure<StonkBot.Appsettings.Models.DbConfig>(configuration.GetSection("DbConfig"));
+
         services.AddTransient<CharterForm>();
         services.AddTransient<IStonkBotCharterDb, StonkBotDbContext>();
         services.AddTransient<IDbConn, DbConn>();

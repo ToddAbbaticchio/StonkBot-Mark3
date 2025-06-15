@@ -65,7 +65,7 @@ public class FileUtil : IFileUtil
             var nqCandleList = await _db.GetNqCandles(selectedDate, selectedMarket, cToken);
             tCandleList.AddRange(_mapper.ConvertToTCandles(nqCandleList, cToken));
         }
-        if (!tCandleList.Any())
+        if (tCandleList.Count == 0)
             throw new Exception("Ahhhhhhh! No transactions!");
 
 
@@ -105,7 +105,7 @@ public class FileUtil : IFileUtil
         decimal profitSum = 0;
 
         // Process ES transactions
-        if (importData.EsTransactions.Any())
+        if (importData.EsTransactions.Count != 0)
         {
             var esToOpens = importData.EsTransactions
                 .Where(x => x.OpenTime.Date == selectedDate.Date)
@@ -131,7 +131,7 @@ public class FileUtil : IFileUtil
         }
 
         // Process MES transactions
-        if (importData.MesTransactions.Any())
+        if (importData.MesTransactions.Count != 0)
         {
             var mesToOpens = importData.MesTransactions
                 .Where(x =>
@@ -155,7 +155,7 @@ public class FileUtil : IFileUtil
         }
 
         // Process NQ transactions
-        if (importData.NqTransactions.Any())
+        if (importData.NqTransactions.Count != 0)
         {
             var nqToOpens = importData.NqTransactions
                 .Where(x => x.OpenTime.Date == selectedDate.Date)
@@ -181,7 +181,7 @@ public class FileUtil : IFileUtil
         }
 
         // Process MNQ transactions
-        if (importData.MnqTransactions.Any())
+        if (importData.MnqTransactions.Count != 0)
         {
             var mnqToOpens = importData.MnqTransactions
                 .Where(x =>

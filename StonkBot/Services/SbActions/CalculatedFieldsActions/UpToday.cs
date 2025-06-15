@@ -21,7 +21,7 @@ internal partial class SbAction
                 .Where(x => x.CalculatedFields == null || x.CalculatedFields.UpToday == null)
                 .ToListAsync(cToken);
 
-        if (!toProcess.Any())
+        if (toProcess.Count == 0)
             return;
 
         _con.WriteLog(MessageSeverity.Info, TargetLog.ActionRunner, $"Processing DB entries missing '{field}' field...");

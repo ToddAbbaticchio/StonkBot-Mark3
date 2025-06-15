@@ -33,7 +33,7 @@ public class ImportDataParser : IImportDataParser
             var tList = csvReader.GetRecords<ImportTransaction>().ToList();
 
             importData = new ImportData(tList);
-            if (importData.EsTransactions.Any() || importData.MesTransactions.Any() || importData.NqTransactions.Any() || importData.MnqTransactions.Any())
+            if (importData.EsTransactions.Count != 0 || importData.MesTransactions.Count != 0 || importData.NqTransactions.Count != 0 || importData.MnqTransactions.Count != 0)
                 return true;
             
             importData = null;

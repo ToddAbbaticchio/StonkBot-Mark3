@@ -12,8 +12,9 @@ public class IpoSecondPassAlert
     public DateTime FirstCheckDate { get; set; }
     public DateTime TargetDate { get; set; }
     public int DaysSatisfied { get; set; }
+    public decimal TodayVolume { get; set; }
 
-    public IpoSecondPassAlert(string symbol, decimal checkDayClose, decimal openingDayLow, decimal todayClose, decimal openingDayOpen, DateTime fDate, DateTime tDate, int daysSatisfied)
+    public IpoSecondPassAlert(string symbol, decimal checkDayClose, decimal openingDayLow, decimal todayClose, decimal openingDayOpen, DateTime fDate, DateTime tDate, int daysSatisfied, decimal todayVolume)
     {
         Symbol = symbol;
         CheckDayClose = checkDayClose.Clean();
@@ -23,5 +24,6 @@ public class IpoSecondPassAlert
         FirstCheckDate = fDate.SbDate();
         TargetDate = tDate.SbDate();
         DaysSatisfied = daysSatisfied;
+        TodayVolume = todayVolume;
     }
 }

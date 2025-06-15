@@ -23,10 +23,8 @@ public partial class MarketPatternMatcher
 
         if (!alert1Exists)
         {
-            var negDays = checkRange
-                .Where(x => x.Close - x.Open < 0)
-                .ToList();
-            if (!negDays.Any())
+            var negDays = checkRange.GetNegativeDays();
+            if (negDays.Count == 0)
                 return newAlerts;
 
             foreach (var negDay in negDays)
@@ -34,9 +32,9 @@ public partial class MarketPatternMatcher
                 var expDate = negDay.Date.GetFollowingTradeDay().GetFollowingTradeDay().GetFollowingTradeDay();
                 var alertDay = checkRange
                     .Where(x => x.Date > negDay.Date)
+                    .Where(x => x.Date <= expDate)
                     .Where(x => x.Close > negDay.High)
                     .Where(x => x.Close > x.Open)
-                    .Where(x => x.Date <= expDate)
                     .MinBy(x => x.Date);
                 if (alertDay == null)
                     continue;
@@ -50,7 +48,7 @@ public partial class MarketPatternMatcher
                     Category = erDay.IndustryInfo?.Category,
                     IsWatched = await _db.IsWatched(er.Symbol, cToken),
                     Date = alertDay.Date,
-                    Message = ",1st start alert"
+                    Message = "1st start alert"
                 });
 
                 alert1Exists = true;
@@ -70,7 +68,7 @@ public partial class MarketPatternMatcher
                 .Where(x => x.Date > alertDate)
                 .Where(x => x.Close - x.Open < 0)
                 .ToList();
-            if (!negDays.Any())
+            if (negDays.Count == 0)
                 return newAlerts;
 
             foreach (var negDay in negDays)

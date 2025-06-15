@@ -16,9 +16,6 @@ public partial class MarketPatternMatcher
     {
         var newAlerts = new List<AlertData>();
 
-        if (er.Alerts.Any(x => x.Type == $"{AlertType.ErLowDate}"))
-            return newAlerts;
-
         var alertDay = checkRange
             .Where(x => x.Date > erDay.Date)
             .Where(x => x.Low <= erDay.Low)
@@ -36,7 +33,7 @@ public partial class MarketPatternMatcher
             Category = erDay.IndustryInfo?.Category,
             IsWatched = await _db.IsWatched(er.Symbol, cToken),
             Date = alertDay.Date,
-            Message = $",Reached ErDate's low! [{erDay.Date.SbDateString()}] {erDay.Low}"
+            Message = $"Reached ErDate's low! [{erDay.Date.SbDateString()}] {erDay.Low}"
         });
 
         return newAlerts;

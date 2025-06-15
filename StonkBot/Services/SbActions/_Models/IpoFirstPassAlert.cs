@@ -9,13 +9,15 @@ public class IpoFirstPassAlert
     public string OpeningHigh { get; set; }
     public int DaysSatisfied { get; set; }
     public DateTime TodayDate { get; set; }
+    public decimal TodayVolume { get; set; }
 
-    public IpoFirstPassAlert(string symbol, decimal todayClose, decimal? openingHigh, DateTime todayDate, int daysSatisfied)
+    public IpoFirstPassAlert(string symbol, decimal todayClose, decimal? openingHigh, DateTime todayDate, int daysSatisfied, decimal todayVolume)
     {
         Symbol = symbol;
         TodayClose = todayClose.Clean();
         OpeningHigh = openingHigh.Clean();
         DaysSatisfied = daysSatisfied;
         TodayDate = todayDate.SbDate();
+        TodayVolume = todayVolume;
     }
 }

@@ -17,4 +17,10 @@ public class ActionInfo
         EndTime = DateTime.Parse($"{todayDate} {endTime}");
         Interval = TimeSpan.FromSeconds((int)interval);
     }
+
+    public void SetNextRuntime()
+    {
+        while (this.StartTime <= DateTime.Now)
+            this.StartTime += this.Interval;
+    }
 }

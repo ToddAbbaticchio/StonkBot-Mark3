@@ -1,12 +1,11 @@
-﻿using System.Diagnostics;
-using Discord;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using StonkBot.Data.Entities;
 using StonkBot.Extensions;
 using StonkBot.Extensions.Enums;
+using StonkBot.Services.CharlesSchwab.APIClient.Models;
 using StonkBot.Services.ConsoleWriter.Enums;
 using StonkBot.Services.SbActions._Models;
-using StonkBot.Services.TDAmeritrade.APIClient.Models;
+using System.Diagnostics;
 
 namespace StonkBot.Services.SbActions;
 
@@ -43,7 +42,7 @@ internal partial class SbAction
         }
         else
         {
-            _con.WriteLog(MessageSeverity.Info, $"MarketStatus is: {targetDate.GetMarketStatus()} - Can't pull EoD numbers when the market isn't open...");
+            _con.WriteLog(MessageSeverity.Info, $"MarketStatus is: {targetDate.GetMarketStatus()} - Can't run IpoCheck.RecordHData when the market isn't open...");
         }
         
         timer.Stop();
@@ -65,11 +64,11 @@ internal partial class SbAction
                 .Where(x => x.Open == null)
                 .ToListAsync(cToken);
 
-            if (!openedSymbols.Any())
+            if (openedSymbols.Count == 0)
                 return;
 
             var openingSymbols = openedSymbols.Select(x => x.Symbol).ToList();
-            var quoteList = await _tdaClient.GetQuotesAsync(openingSymbols, cToken);
+            var quoteList = await _marketClient.GetQuotesAsync(openingSymbols, cToken);
             
             foreach (var ipo in openedSymbols)
             {
@@ -78,30 +77,30 @@ internal partial class SbAction
                     // get historical quotes for the last year
                     try
                     {
-                        var historicalQuotes = await _tdaClient.GetHistoricalDataAsync(ipo.Symbol, "year", "1", "daily", cToken);
-                        if (historicalQuotes == null || !historicalQuotes.candles.Any())
+                        var historicalQuotes = await _marketClient.GetHistoricalDataAsync(ipo.Symbol, "year", "1", "daily", "1", cToken);
+                        if (historicalQuotes == null || historicalQuotes.candles.Count == 0)
                         {
                             _con.WriteLog(MessageSeverity.Info, _targetLog, $"Unable to retrieve quote history for {ipo.Symbol}! Skipping!");
                             continue;
                         }
 
                         // if we have the exact day - great.  If not, select the first day we do have and update things
-                        var openingDayQuote = historicalQuotes.candles.FirstOrDefault(x => x.GoodDateTime == targetDate);
+                        var openingDayQuote = historicalQuotes.candles.FirstOrDefault(x => x.GoodDate == targetDate);
                         if (openingDayQuote == null)
                         {
                             var actualOpen = historicalQuotes.candles
-                                .MinBy(x => x.GoodDateTime);
+                                .MinBy(x => x.GoodDate);
                             if (actualOpen == null)
                                 continue;
 
-                            ipo.ExpectedListingDate = actualOpen.GoodDateTime;
+                            ipo.ExpectedListingDate = actualOpen.GoodDate;
                             ipo.Open = actualOpen.open;
                             ipo.Close = actualOpen.close;
                             ipo.Low = actualOpen.low;
                             ipo.High = actualOpen.high;
                             ipo.Volume = actualOpen.volume;
 
-                            _con.WriteLog(MessageSeverity.Info, _targetLog, $"Looks like {ipo.Symbol} actually opened on {actualOpen.GoodDateTime.SbDateString()}... Updated and added opening day info!");
+                            _con.WriteLog(MessageSeverity.Info, _targetLog, $"Looks like {ipo.Symbol} actually opened on {actualOpen.GoodDate.SbDateString()}... Updated and added opening day info!");
                             continue;
                         }
 
@@ -121,7 +120,7 @@ internal partial class SbAction
 
                 if (ipo.ExpectedListingDate == targetDate)
                 {
-                    var quote = quoteList.FirstOrDefault(x => x?.symbol == ipo.Symbol);
+                    var quote = quoteList!.FirstOrDefault(x => x?.symbol == ipo.Symbol);
                     if (quote == null)
                     {
                         _con.WriteLog(MessageSeverity.Debug, _targetLog, $"Unable to retrieve a quote for {ipo.Symbol}... skipping!");
@@ -155,16 +154,15 @@ internal partial class SbAction
                 .Where(x => x.High != null)
                 .Where(x => x.FirstPassDate != targetDate)
                 .ToListAsync(cToken);
-            
-            if (!ipoList.Any())
+            if (ipoList.Count == 0)
                 return;
 
             // Get today's quotes for everything in ipoList
-            var ipoListQuotes = await _tdaClient.GetQuotesAsync(ipoList.Select(x => x.Symbol).ToList(), cToken);
+            var ipoListQuotes = await _marketClient.GetQuotesAsync(ipoList.Select(x => x.Symbol).ToList(), cToken);
             var alertList = new List<IpoFirstPassAlert>();
             foreach (var ipo in ipoList)
             {
-                var thisQuote = ipoListQuotes.FirstOrDefault(x => x!.symbol == ipo.Symbol);
+                var thisQuote = ipoListQuotes!.FirstOrDefault(x => x!.symbol == ipo.Symbol);
                 if (thisQuote == null)
                 {
                     _con.WriteLog(MessageSeverity.Warning, $"Could not retrieve a quote for watched IPO: {ipo.Symbol}");
@@ -190,11 +188,13 @@ internal partial class SbAction
                 }
                 
                 // otherwise add to list
-                alertList.Add(new IpoFirstPassAlert(ipo.Symbol, thisQuote.regularMarketLastPrice, ipo.High, targetDate, daysSatisfied));
+                alertList.Add(new IpoFirstPassAlert(ipo.Symbol, thisQuote.regularMarketLastPrice, ipo.High, targetDate, daysSatisfied, thisQuote.totalVolume));
             }
 
-            if (alertList.Any())
-                await _discordClient.SendIpoFirstPassAlertsAsync(alertList, cToken);
+            var test = alertList.Count != 0;
+
+            if (alertList.Count != 0 == true)
+                await _discordClient.SendIpoFirstPassAlertsAsync(alertList.OrderByDescending(x => x.TodayVolume).ToList(), cToken);
         }
         catch (Exception ex)
         {
@@ -217,11 +217,11 @@ internal partial class SbAction
                 .Where(x => x.Open != null)
                 .Where(x => x.LastSecondPassDate != targetDate)
                 .ToListAsync(cToken);
-            if (!ipoList.Any())
+            if (ipoList.Count == 0)
                 return;
 
             // Get targetDate's quotes for everything in ipoList
-            var ipoListQuotes = await _tdaClient.GetQuotesAsync(ipoList.Select(x => x.Symbol).ToList(), cToken);
+            var ipoListQuotes = await _marketClient.GetQuotesAsync(ipoList.Select(x => x.Symbol).ToList(), cToken);
             foreach (var ipo in ipoList)
             {
                 var matches = dbIpoHData
@@ -231,11 +231,11 @@ internal partial class SbAction
                     .Where(x => x.Close < ipo.Low)
                     .ToList();
 
-                if (!matches.Any())
+                if (matches.Count == 0)
                     continue;
                 var firstMatch = matches.MinBy(x => x.Date);
 
-                var quote = ipoListQuotes.FirstOrDefault(x => x!.symbol == ipo.Symbol);
+                var quote = ipoListQuotes!.FirstOrDefault(x => x!.symbol == ipo.Symbol);
                 if (quote == null)
                 {
                     _con.WriteLog(MessageSeverity.Warning, _targetLog, $"Could not retrieve a quote for matched IPO: {ipo.Symbol}");
@@ -259,17 +259,17 @@ internal partial class SbAction
                 }
 
                 // add any that make it to here to the alert list
-                var alert = new IpoSecondPassAlert(ipo.Symbol, firstMatch!.Close, (decimal)ipo.Low!, quote.regularMarketLastPrice, (decimal)ipo.Open!, firstMatch.Date, targetDate, daysSatisfied);
+                var alert = new IpoSecondPassAlert(ipo.Symbol, firstMatch!.Close, (decimal)ipo.Low!, quote.regularMarketLastPrice, (decimal)ipo.Open!, firstMatch.Date, targetDate, daysSatisfied, quote.totalVolume);
                 alertList.Add(alert);
             }
 
             // If we met alert conditions process the alerts
-            if (alertList.Any())
-                await _discordClient.SendIpoSecondPassAlertsAsync(alertList, cToken);
+            if (alertList.Count != 0)
+                await _discordClient.SendIpoSecondPassAlertsAsync(alertList.OrderByDescending(x => x.TodayVolume).ToList(), cToken);
         }
         catch (Exception ex)
         {
-            _con.WriteLog(MessageSeverity.Error, $"Error during StonkBotActions.Ipo.CheckFirstPass: {ex.Message}");
+            _con.WriteLog(MessageSeverity.Error, $"Error during StonkBotActions.Ipo.CheckSecondPass: {ex.Message}");
         }
     }
 
@@ -290,7 +290,7 @@ internal partial class SbAction
 
             var ipoCount = ipoList.Count;
             var newDataCount = 0;
-            var quoteList = await _tdaClient.GetQuotesAsync(ipoList.Select(x => x.Symbol).ToList(), cToken);
+            var quoteList = await _marketClient.GetQuotesAsync(ipoList.Select(x => x.Symbol).ToList(), cToken);
             foreach (var ipo in ipoList)
             {
                 try
@@ -299,14 +299,14 @@ internal partial class SbAction
                     if (dbCheck != null)
                         continue;
 
-                    var quote = quoteList.FirstOrDefault(x => x!.symbol == ipo.Symbol);
+                    var quote = quoteList!.FirstOrDefault(x => x!.symbol == ipo.Symbol);
                     if (quote == null)
                         continue;
 
                     ipo.HData ??= new List<IpoHData>();
                     ipo.HData.Add(new IpoHData
                     {
-                        Symbol = quote.symbol,
+                        Symbol = quote.symbol!,
                         Date = today,
                         Open = quote.openPrice,
                         Close = quote.regularMarketLastPrice,
@@ -343,13 +343,13 @@ internal partial class SbAction
                 .Where(x => x.ExpectedListingDate <= DateTime.Now.Date)
                 .Where(x => x.Open == null)
                 .ToListAsync(cToken);
-            if (!symbolsToCheck.Any())
+            if (symbolsToCheck.Count == 0)
                 return;
 
             var symbolList = symbolsToCheck.Select(x => x.Symbol).ToList();
             for (var i = 0; i < symbolList.Count; i += grabSize)
             {
-                var quoteList = new List<Quote?>();
+                var quoteList = new List<Quote>();
                 var subList = symbolList
                     .Skip(i)
                     .Take(grabSize)
@@ -357,19 +357,19 @@ internal partial class SbAction
 
                 try
                 {
-                    quoteList = await _tdaClient.GetQuotesAsync(subList, cToken);
+                    quoteList = await _marketClient.GetQuotesAsync(subList, cToken);
                 }
                 catch (Exception ex)
                 {
                     _con.WriteLog(MessageSeverity.Warning, _targetLog, $"Oh look: {ex.Message}");
                 }
 
-                if (quoteList.Any())
+                if (quoteList?.Count != 0)
                     continue;
 
                 foreach (var symbol in subList)
                 {
-                    var soloQuote = await _tdaClient.GetQuoteAsync(symbol, cToken);
+                    var soloQuote = await _marketClient.GetQuoteAsync(symbol, cToken);
                     if (soloQuote != null)
                         continue;
 

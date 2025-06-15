@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using StonkBot.Appsettings.Models;
 using StonkBot.Data.Entities;
-using StonkBot.Options;
+using StonkBot.Services.CharlesSchwab.APIClient;
 
 namespace StonkBot.Data;
 
@@ -13,11 +15,13 @@ public interface IStonkBotDb
     public DbSet<HistoricalData> HistoricalData { get; }
     public DbSet<CalculatedFields> CalculatedFields { get; }
     public DbSet<IndustryInfo> IndustryInfo { get; }
+    public DbSet<IndustryInfoHData> IndustryInfoHData { get; }
     public DbSet<IpoListing> IpoListings { get; }
     public DbSet<EarningsReport> EarningsReports { get; }
     public DbSet<DiscordMessageRecord> DiscordMessageRecords { get; }
     public DbSet<IpoHData> IpoHData { get; }
     public DbSet<WatchedSymbol> WatchedSymbols { get; }
+    public DbSet<MostActive> MostActiveRecords { get; }
 
     Task SbSaveChangesAsync(CancellationToken cToken);
     Task<string> IsWatched(string symbol, CancellationToken cToken);
@@ -26,24 +30,34 @@ public interface IStonkBotDb
 public partial class StonkBotDbContext : DbContext, IStonkBotDb
 {
     public string DbPath { get; }
-
+    
     public DbSet<AuthToken> AuthTokens { get; set; } = null!;
     public DbSet<EsCandle> EsCandles { get; set; } = null!;
     public DbSet<NqCandle> NqCandles { get; set; } = null!;
     public DbSet<HistoricalData> HistoricalData { get; set; } = null!;
     public DbSet<CalculatedFields> CalculatedFields { get; set; } = null!;
     public DbSet<IndustryInfo> IndustryInfo { get; set; } = null!;
+    public DbSet<IndustryInfoHData> IndustryInfoHData { get; set; } = null!;
     public DbSet<IpoListing> IpoListings { get; set; } = null!;
     public DbSet<EarningsReport> EarningsReports { get; set; } = null!;
     public DbSet<DiscordMessageRecord> DiscordMessageRecords { get; set; } = null!;
     public DbSet<IpoHData> IpoHData { get; set; } = null!;
     public DbSet<WatchedSymbol> WatchedSymbols { get; set; } = null!;
+    public DbSet<MostActive> MostActiveRecords { get; set; } = null!;
 
-    public StonkBotDbContext()
+    public StonkBotDbContext(DbContextOptions<StonkBotDbContext> options, IOptions<DbConfig> dbConfig) : base(options)
     {
-        const string local = Constants.LocalDbFilePath;
-        const string network = Constants.NetworkDbFilePath;
-        
+        var data = dbConfig.Value;
+        var local = data.LocalDbFilePath;
+        var network = data.NetworkDbFilePath;
+        DbPath = File.Exists(local) ? local : network;
+    }
+
+    public StonkBotDbContext(IOptions<DbConfig> dbConfig)
+    {
+        var data = dbConfig.Value;
+        var local = data.LocalDbFilePath;
+        var network = data.NetworkDbFilePath;
         DbPath = File.Exists(local) ? local : network;
     }
     
@@ -79,6 +93,7 @@ public partial class StonkBotDbContext : DbContext, IStonkBotDb
         modelBuilder.Entity<ErAlert>(e =>
         {
             e.HasKey(x => x.Id);
+            e.Property(x => x.Id).ValueGeneratedOnAdd();
         });
 
         modelBuilder.Entity<EsCandle>(e =>
@@ -107,6 +122,14 @@ public partial class StonkBotDbContext : DbContext, IStonkBotDb
             e.HasKey(x => x.Symbol);
         });
 
+        modelBuilder.Entity<IndustryInfoHData>(e =>
+        {
+            e.HasKey(x => new { x.Symbol, x.Date });
+            e.HasOne(x => x.IndustryInfo)
+                .WithMany()
+                .IsRequired(false);
+        });
+
         modelBuilder.Entity<IpoHData>(e =>
         {
             e.HasKey(x => new { x.Symbol, x.Date });
@@ -124,6 +147,11 @@ public partial class StonkBotDbContext : DbContext, IStonkBotDb
         {
             e.HasKey(x => x.Symbol);
         });
+
+        modelBuilder.Entity<MostActive>(e =>
+        {
+            e.HasKey(x => new { x.Symbol, x.Date });
+        });
     }
 
     public async Task SbSaveChangesAsync(CancellationToken cToken)
@@ -135,10 +163,6 @@ public partial class StonkBotDbContext : DbContext, IStonkBotDb
         }
     }
 
-    public async Task<string> IsWatched(string symbol, CancellationToken cToken)
-    {
-        return await WatchedSymbols.AnyAsync(x => x.Symbol == symbol, cToken) 
-            ? "WATCHED" 
-            : "";
-    }
+    public async Task<string> IsWatched(string symbol, CancellationToken cToken) =>
+        await WatchedSymbols.AnyAsync(x => x.Symbol == symbol, cToken) ? "WATCHED" : "";
 }

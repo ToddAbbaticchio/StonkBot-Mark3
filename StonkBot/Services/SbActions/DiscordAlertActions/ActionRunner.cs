@@ -80,25 +80,25 @@ internal partial class SbAction
                     .Where(x => x.DateTime == targetDate)
                     .ToListAsync(cToken);
 
-                if (!todayMessages.Any() || todayMessages.All(x => x.Channel != DiscordChannel.VolAlert.ToString()))
+                if (todayMessages.Count == 0 || todayMessages.All(x => x.Channel != DiscordChannel.VolAlert.ToString()))
                 {
                     _con.WriteLog(MessageSeverity.Info, _targetLog, "  Processing DB for VolumeAlerts...");
                     await CheckSendVolumeAlert(targetDate, cToken);
                 }
 
-                if (!todayMessages.Any() || todayMessages.All(x => x.Channel != DiscordChannel.VolAlert2.ToString()))
+                if (todayMessages.Count == 0 || todayMessages.All(x => x.Channel != DiscordChannel.VolAlert2.ToString()))
                 {
                     _con.WriteLog(MessageSeverity.Info, _targetLog, "  Processing DB for VolumeAlerts2...");
                     await CheckSendVolumeAlert2(targetDate, cToken);
                 }
 
-                if (!todayMessages.Any() || todayMessages.All(x => x.Channel != DiscordChannel.UpperShadow.ToString()))
+                if (todayMessages.Count == 0 || todayMessages.All(x => x.Channel != DiscordChannel.UpperShadow.ToString()))
                 {
                     _con.WriteLog(MessageSeverity.Info, _targetLog, "  Processing DB for UpperShadowAlerts...");
                     await CheckSendUpperShadowAlert(targetDate, cToken);
                 }
                 
-                if (!todayMessages.Any() || todayMessages.All(x => x.Channel != DiscordChannel.FourHand.ToString()))
+                if (todayMessages.Count == 0 || todayMessages.All(x => x.Channel != DiscordChannel.FourHand.ToString()))
                 {
                     _con.WriteLog(MessageSeverity.Info, _targetLog, "  Processing DB for FourHandAlerts...");
                     await CheckSendFourHandAlert(targetDate, cToken);

@@ -5,36 +5,30 @@ namespace StonkBotChartoMatic
 {
     public sealed partial class CharterForm : Form
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
+        private Chart chart1;
+        private Chart chart2;
+        private DateTimePicker DatePicker;
+        private ComboBox CandleDrop;
+        private ComboBox MarketDrop;
+        private Button UpdateButton;
+        //private CheckBox ShowLabels;
+        private ComboBox ChartTypeDrop;
+        private Label TextField;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
             if (disposing && (components != null))
-            {
                 components.Dispose();
-            }
+        
             base.Dispose(disposing);
         }
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
-        private Chart chart1;
-        private Chart chart2;
-
         private void InitializeComponent()
         {
-            ChartArea chartArea1 = new ChartArea();
+            ChartArea chart1Area = new ChartArea();
             Series series1 = new Series();
-            ChartArea chartArea2 = new ChartArea();
+            ChartArea chart2Area = new ChartArea();
             Series series2 = new Series();
             chart1 = new Chart();
             chart2 = new Chart();
@@ -53,12 +47,12 @@ namespace StonkBotChartoMatic
             // 
             chart1.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             chart1.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea1.Name = "ChartArea1";
-            chart1.ChartAreas.Add(chartArea1);
+            chart1Area.Name = "Chart1Area";
+            chart1.ChartAreas.Add(chart1Area);
             chart1.Location = new System.Drawing.Point(0, 0);
             chart1.Margin = new Padding(4, 3, 4, 3);
             chart1.Name = "chart1";
-            series1.ChartArea = "ChartArea1";
+            series1.ChartArea = "Chart1Area";
             series1.Name = "Series1";
             chart1.Series.Add(series1);
             chart1.Size = new System.Drawing.Size(1101, 400);
@@ -68,13 +62,13 @@ namespace StonkBotChartoMatic
             // 
             chart2.Anchor = AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             chart2.BorderlineColor = System.Drawing.Color.Transparent;
-            chartArea2.Name = "ChartArea1";
-            chart2.ChartAreas.Add(chartArea2);
+            chart2Area.Name = "Chart2Area";
+            chart2.ChartAreas.Add(chart2Area);
             chart2.Location = new System.Drawing.Point(0, 392);
             chart2.Margin = new Padding(4, 3, 4, 3);
             chart2.Name = "chart2";
-            series2.ChartArea = "ChartArea1";
-            series2.Name = "Series1";
+            series2.ChartArea = "Chart2Area";
+            series2.Name = "Series2";
             chart2.Series.Add(series2);
             chart2.Size = new System.Drawing.Size(1101, 135);
             chart2.TabIndex = 1;
@@ -185,13 +179,5 @@ namespace StonkBotChartoMatic
             ResumeLayout(false);
             PerformLayout();
         }
-
-        private DateTimePicker DatePicker;
-        private ComboBox CandleDrop;
-        private ComboBox MarketDrop;
-        private Button UpdateButton;
-        //private CheckBox ShowLabels;
-        private ComboBox ChartTypeDrop;
-        private Label TextField;
     }
 }

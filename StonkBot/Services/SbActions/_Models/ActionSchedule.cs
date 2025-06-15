@@ -19,6 +19,14 @@ public class ActionSchedule
 
         ActionInfos.Add(new ActionInfo
         (
+            method: "IndustryInfoScrape",
+            startTime: "8:45:00 PM",
+            endTime: "23:59:59",
+            interval: ActionInterval.Daily
+        ));
+
+        ActionInfos.Add(new ActionInfo
+        (
             method: "IpoCheck",
             startTime: "4:05:00 PM",
             endTime: "23:59:59",
@@ -65,5 +73,20 @@ public class ActionSchedule
             interval: ActionInterval.Min10
         ));
 
+        ActionInfos.Add(new ActionInfo
+        (
+            method: "DailyEsCandles",
+            startTime: "5:10:00 PM",
+            endTime: "6:00:00 PM",
+            interval: ActionInterval.Daily
+        ));
+
+        ActionInfos.Add(new ActionInfo
+        (
+            method: "DailyMostActive",
+            startTime: "5:30:00 PM",
+            endTime: "23:59:59",
+            interval: ActionInterval.Hour1
+        ));
     }
 }

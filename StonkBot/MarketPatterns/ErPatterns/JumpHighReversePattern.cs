@@ -1,6 +1,5 @@
 ﻿using StonkBot.Data.Entities;
 using StonkBot.Data.Enums;
-using StonkBot.Extensions;
 using StonkBot.MarketPatterns.Models;
 
 namespace StonkBot.MarketPatterns;
@@ -15,6 +14,9 @@ public partial class MarketPatternMatcher
     public async Task<List<AlertData>> JumpHighReverseCheck(EarningsReport er, HistoricalData erDay, HistoricalData erDayAfter, List<HistoricalData> checkRange, CancellationToken cToken)
     {
         var newAlerts = new List<AlertData>();
+        if (er.Alerts.Any(x => x.Type == $"{AlertType.JumpHighReverseAlert}"))
+            return newAlerts;
+
         var prevJumpHighReverseAlertDates = er.Alerts
             .Where(x => x.Symbol == er.Symbol)
             .Where(x => x.Type == $"{AlertType.JumpHighReverseAlert}")
@@ -26,6 +28,7 @@ public partial class MarketPatternMatcher
             .ToList();
         var newJumpHighReverseAlerts = jumpHighReverseDates
             .Where(x => !prevJumpHighReverseAlertDates.Contains(x.Date))
+            .OrderBy(x => x.Date)
             .ToList();
         
         foreach (var alertDay in newJumpHighReverseAlerts)
@@ -39,8 +42,10 @@ public partial class MarketPatternMatcher
                 Category = erDay.IndustryInfo?.Category,
                 IsWatched = await _db.IsWatched(er.Symbol, cToken),
                 Date = alertDay.Date,
-                Message = ",Jump high - reverse"
+                Message = "Jump high - reverse"
             });
+
+            break;
         }
         
         return newAlerts;

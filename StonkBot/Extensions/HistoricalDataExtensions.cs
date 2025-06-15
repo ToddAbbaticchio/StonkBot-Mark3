@@ -15,14 +15,13 @@ public static class HistoricalDataExtensions
 
     public static bool ChangeIsSmall(this HistoricalData h1, HistoricalData h2)
     {
-        var a1 = new[] { h1.Open, h1.Close };
-        var a2 = new[] { h2.Open, h2.Close };
+        var d1 = new[] { h1.Open, h1.Close };
+        var d2 = new[] { h2.Open, h2.Close };
+        var checkDiff = d1.Max() < d2.Min()
+            ? (d2.Min() - d1.Max()) / d2.Min()
+            : (d1.Min() - d2.Max()) / d1.Min();
 
-        var checkDiff = a1.Max() < a2.Min()
-            ? a1.Max() / a2.Min()
-            : a1.Min() / a2.Max();
-
-        var changeIsSmall = checkDiff <= (decimal)1.03;
+        var changeIsSmall = checkDiff is <= (decimal).03 and >= (decimal)-.03;
         return changeIsSmall;
     }
 

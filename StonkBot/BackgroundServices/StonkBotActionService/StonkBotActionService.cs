@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using StonkBot.Services.ConnectionCheck;
 using StonkBot.Services.ConsoleWriter;
 using StonkBot.Services.ConsoleWriter.Enums;
@@ -14,14 +15,14 @@ public class StonkBotActionService : IHostedService, IDisposable
     private int _threadRunning;
     private readonly TimeSpan _interval = TimeSpan.FromSeconds(30);
     private const string ServiceName = nameof(StonkBotActionService);
-    private readonly IStonkBotActionRunner _actionRunner;
+    private readonly IServiceScopeFactory _scopeFactory;
 
-    public StonkBotActionService(IConsoleWriter con, IConnectionChecker connCheck, IStonkBotActionRunner actionRunner)
+    public StonkBotActionService(IConsoleWriter con, IConnectionChecker connCheck, IServiceScopeFactory scopeFactory)
     {
         _cts = new CancellationTokenSource();
         _con = con;
         _connCheck = connCheck;
-        _actionRunner = actionRunner;
+        _scopeFactory = scopeFactory;
     }
 
     public Task StartAsync(CancellationToken cToken)
@@ -58,6 +59,7 @@ public class StonkBotActionService : IHostedService, IDisposable
                     _con.WriteLog(MessageSeverity.Info, $"Generated ActionSchedule for {DateTime.Today}!");
                 }
 
+                // Dont run more than one concurrent session
                 if (Interlocked.CompareExchange(ref _threadRunning, 1, 0) != 0)
                 {
                     _con.WriteLog(MessageSeverity.Info, $"Previous {ServiceName} thread work is still in process. Trying again in {_interval} seconds...");
@@ -72,7 +74,9 @@ public class StonkBotActionService : IHostedService, IDisposable
                 }
 
                 _con.UpdateStatus(actionSchedule);
-                actionSchedule = await _actionRunner.Execute(actionSchedule, _cts.Token);
+                using var scope = _scopeFactory.CreateScope();
+                var actionRunner = scope.ServiceProvider.GetRequiredService<IStonkBotActionRunner>();
+                actionSchedule = await actionRunner.Execute(actionSchedule, _cts.Token);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using StonkBot.Services.ConnectionCheck;
 using StonkBot.Services.ConsoleWriter;
 using StonkBot.Services.ConsoleWriter.Enums;
@@ -11,17 +12,23 @@ public class StonkBotStreamService : IHostedService, IDisposable
     private readonly IConsoleWriter _con;
     private readonly IConnectionChecker _connCheck;
     private int _threadRunning;
-    private readonly TimeSpan _interval = TimeSpan.FromSeconds(30);
-    private const string ServiceName = nameof(StonkBotStreamService);
+    //private readonly TimeSpan _interval = TimeSpan.FromSeconds(30);
+    
+    // 15 seconds just for the dance party
+    private readonly TimeSpan _interval = TimeSpan.FromSeconds(15);
+    private int _danceParty = 1;
 
+    private const string ServiceName = nameof(StonkBotStreamService);
+    //private readonly IServiceScopeFactory _scopeFactory;
     private readonly IStonkBotStreamRunner _streamRunner;
 
-    public StonkBotStreamService(IConsoleWriter con, IConnectionChecker connCheck, IStonkBotStreamRunner streamRunner)
+    public StonkBotStreamService(IConsoleWriter con, IConnectionChecker connCheck, IStonkBotStreamRunner streamRunner/*, IServiceScopeFactory scopeFactory*/)
     {
         _cts = new CancellationTokenSource();
         _con = con;
         _connCheck = connCheck;
         _streamRunner = streamRunner;
+        //_scopeFactory = scopeFactory;
     }
 
     public Task StartAsync(CancellationToken cToken)
@@ -63,7 +70,13 @@ public class StonkBotStreamService : IHostedService, IDisposable
                     continue;
                 }
 
-                await _streamRunner.Execute(_cts.Token);
+                /*using var scope = _scopeFactory.CreateScope();
+                var streamRunner = scope.ServiceProvider.GetRequiredService<IStonkBotStreamRunner>();
+                await streamRunner.Execute(_cts.Token);*/
+
+                //await _streamRunner.Execute(_cts.Token);
+                
+                _danceParty = _con.DanceParty(_danceParty);
             }
             catch (Exception ex)
             {

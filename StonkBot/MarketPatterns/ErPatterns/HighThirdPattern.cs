@@ -1,6 +1,5 @@
 ﻿using StonkBot.Data.Entities;
 using StonkBot.Data.Enums;
-using StonkBot.Extensions;
 using StonkBot.MarketPatterns.Models;
 
 namespace StonkBot.MarketPatterns;
@@ -15,6 +14,9 @@ public partial class MarketPatternMatcher
     public async Task<List<AlertData>> HighThirdCheck(EarningsReport er, HistoricalData erDay, HistoricalData erDayAfter, List<HistoricalData> checkRange, CancellationToken cToken)
     {
         var newAlerts = new List<AlertData>();
+        if (er.Alerts.Any(x => x.Type == $"{AlertType.HighThirdAlert}"))
+            return newAlerts;
+
         var decX = new[] { erDayAfter.Open, erDayAfter.Close }.Min();
         var decY = new[] { erDay.Open, erDay.Close }.Max();
         //var c1 = decY + (decX - decY) / 2;
@@ -32,7 +34,9 @@ public partial class MarketPatternMatcher
             .ToList();
         var newThirdAlerts = highThirdAlertDays
             .Where(x => !prevHighThirdAlertDates.Contains(x.Date))
+            .OrderBy(x => x.Date)
             .ToList();
+
         foreach (var alertDay in newThirdAlerts)
         {
             newAlerts.Add(new AlertData
@@ -44,8 +48,10 @@ public partial class MarketPatternMatcher
                 Category = erDay.IndustryInfo?.Category,
                 IsWatched = await _db.IsWatched(er.Symbol, cToken),
                 Date = alertDay.Date,
-                Message = ",Jump high - test back 1/3"
+                Message = "Jump high - test back 1/3"
             });
+
+            break;
         }
 
         return newAlerts;

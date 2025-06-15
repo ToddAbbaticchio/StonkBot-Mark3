@@ -2,12 +2,18 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using StonkBot.Data.Entities;
 using StonkBotChartoMatic.Charter.Extensions;
 
 namespace StonkBotChartoMatic.Charter;
 
 internal class CandleResizer
 {
+    public static List<EsCandle> SetSize(List<EsCandle> esCandles, int candleLen)
+    {
+        return new List<EsCandle>();
+    }
+    
     public static List<DataTableRowV1> SetSize(DataTable dataTable, int candleLen)
     {
         var rows = dataTable.Rows;

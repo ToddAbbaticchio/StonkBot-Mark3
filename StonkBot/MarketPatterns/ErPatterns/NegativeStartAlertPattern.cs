@@ -23,10 +23,8 @@ public partial class MarketPatternMatcher
 
         if (!alert1Exists)
         {
-            var posDays = checkRange
-                .Where(x => x.Close - x.Open > 0)
-                .ToList();
-            if (!posDays.Any())
+            var posDays = checkRange.GetPositiveDays();
+            if (posDays.Count == 0)
                 return newAlerts;
 
             foreach (var posDay in posDays)
@@ -51,7 +49,7 @@ public partial class MarketPatternMatcher
                     Category = erDay.IndustryInfo?.Category,
                     IsWatched = await _db.IsWatched(er.Symbol, cToken),
                     Date = alertDay.Date,
-                    Message = ",1st negative start alert"
+                    Message = "1st negative start alert"
                 });
 
                 alert1Exists = true;
@@ -71,7 +69,7 @@ public partial class MarketPatternMatcher
                 .Where(x => x.Date > alertDate)
                 .Where(x => x.Close - x.Open > 0)
                 .ToList();
-            if (!posDays.Any())
+            if (posDays.Count == 0)
                 return newAlerts;
 
             foreach (var posDay in posDays)

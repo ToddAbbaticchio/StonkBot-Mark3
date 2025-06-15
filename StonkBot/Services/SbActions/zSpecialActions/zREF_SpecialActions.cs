@@ -1,13 +1,6 @@
-﻿/*using System.Collections.Concurrent;
-using Discord.Webhook;
+﻿/*using Discord.Webhook;
 using Microsoft.EntityFrameworkCore;
-using StonkBot.StonkBot._SBResources;
-using StonkBot.StonkBot.Actions.Enums;
-using StonkBot.StonkBot.Actions.Models;
-using StonkBot.StonkBot.Database;
-using StonkBot.StonkBot.Database.Entities.IndustryAnalysis;
-using StonkBot.StonkBot.Services.TDAmeritrade;
-using StonkBot.StonkBot.Utilities;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 
 namespace StonkBot.StonkBot.Actions;
@@ -32,15 +25,15 @@ public interface ISpecialActions
 
 internal class SpecialActions : ISpecialActions
 {
-    private readonly ITdaApiClient _tdaService;
+    private readonly SchwabApiClient _marketService;
     private readonly StonkBotDbContext _db;
     private readonly ConsoleWriter _cWriter;
     private readonly int _progressTick;
 
-    public SpecialActions(StonkBotDbContext db, ITdaApiClient tdaService, ConsoleWriter cWriter)
+    public SpecialActions(StonkBotDbContext db, ISchwabApiClient marketService, ConsoleWriter cWriter)
     {
         _db = db;
-        _tdaService = tdaService;
+        _marketService = marketService;
         _cWriter = cWriter;
         _progressTick = 100;
     }
@@ -1173,11 +1166,11 @@ internal class SpecialActions : ISpecialActions
                 if (goodDataRange == null)
                     continue;
 
-                goodDataRange.candles.ForEach(x => x.goodDateTime = TimeHelper.ConvertLongToUTCDateTime(x.datetime));
+                goodDataRange.candles.ForEach(x => x.GoodDate = TimeHelper.ConvertLongToUTCDateTime(x.datetime));
 
                 var actionItems = missingData.Where(x => x.Symbol == symbol).ToList();
                 foreach (var thisHistoricalData in from actionItem in actionItems
-                                                   let matchData = goodDataRange.candles.FirstOrDefault(x => x.goodDateTime == actionItem.Date)
+                                                   let matchData = goodDataRange.candles.FirstOrDefault(x => x.GoodDate == actionItem.Date)
                                                    where matchData != null
                                                    select new IAHistoricalData
                                                    {
@@ -1187,7 +1180,7 @@ internal class SpecialActions : ISpecialActions
                                                        Low = matchData.low,
                                                        High = matchData.high,
                                                        Volume = matchData.volume,
-                                                       Datetime = (DateTime)matchData.goodDateTime!
+                                                       Datetime = (DateTime)matchData.GoodDate!
                                                    })
                 {
                     hData.Add(thisHistoricalData);
@@ -1345,23 +1338,23 @@ internal class SpecialActions : ISpecialActions
     {
         var hData = _db.IAHistoricalData;
         var checkData = await _tdaService.GetHistoricalDataAsync(targetStonk, "month", "1", "daily", cToken);
-        checkData?.candles.ForEach(x => x.goodDateTime = TimeHelper.ConvertLongToUTCDateTime(x.datetime));
+        checkData?.candles.ForEach(x => x.GoodDate = TimeHelper.ConvertLongToUTCDateTime(x.datetime));
 
         var badDataList = new List<string>();
         if (checkData?.candles != null)
             foreach (var day in checkData!.candles)
             {
-                var dbDay = await hData.FindAsync(new object[] { targetStonk, day.goodDateTime! }, cToken);
+                var dbDay = await hData.FindAsync(new object[] { targetStonk, day.GoodDate! }, cToken);
                 if (dbDay == null)
                 {
-                    _cWriter.WriteMessage($"No DB data for {day.goodDateTime}", ConsoleColor.DarkYellow);
+                    _cWriter.WriteMessage($"No DB data for {day.GoodDate}", ConsoleColor.DarkYellow);
                     continue;
                 }
 
                 if (dbDay.Close == day.close)
                     continue;
 
-                badDataList.Add(day.goodDateTime.ToString()!);
+                badDataList.Add(day.GoodDate.ToString()!);
             }
 
         if (badDataList.Any())

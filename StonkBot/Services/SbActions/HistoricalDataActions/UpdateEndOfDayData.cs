@@ -46,9 +46,9 @@ internal partial class SbAction
                     .Skip(i)
                     .Take(grabSize)
                     .ToList();
-                var subListQuotes = await _tdaClient.GetQuotesAsync(subList, cToken);
+                var subListQuotes = await _marketClient.GetQuotesAsync(subList, cToken);
 
-                foreach (var quote in subListQuotes)
+                foreach (var quote in subListQuotes!)
                 {
                     if (quote == null)
                         continue;
@@ -58,7 +58,7 @@ internal partial class SbAction
                     {
                         newData.Add(new HistoricalData
                         {
-                            Symbol = quote.symbol,
+                            Symbol = quote.symbol!,
                             Date = today,
                             Open = quote.openPrice,
                             Close = quote.regularMarketLastPrice,
@@ -83,7 +83,7 @@ internal partial class SbAction
             _con.WriteLog(MessageSeverity.Info, _targetLog, updatedSymbols > 0 ? $"Updating low/high prices for {updatedSymbols} db entries!" : "No updates to save!");
 
             // Add data to DB
-            if (newData.Any())
+            if (newData.Count != 0)
                 await _db.HistoricalData.AddRangeAsync(newData, cToken);
 
             await _db.SbSaveChangesAsync(cToken);

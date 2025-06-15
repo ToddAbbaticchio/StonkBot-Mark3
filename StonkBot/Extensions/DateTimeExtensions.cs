@@ -46,12 +46,37 @@ public static class DateTimeExtensions
         var diff = Convert.ToDateTime(tokenTimestamp).ToUniversalTime() - origin;
         return Math.Floor(diff.TotalMilliseconds);
     }
+    
     public static double ToUnixTimeStamp(this DateTime tokenTimestamp)
     {
         var origin = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
         var diff = tokenTimestamp.ToUniversalTime() - origin;
         return Math.Floor(diff.TotalMilliseconds);
     }
+
+    public static string ToUnixTimeMillisecondsString(this DateTime date)
+    {
+        DateTime utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+        long unixTimestampMillis = Convert.ToInt64((utcDate - DateTime.UnixEpoch).TotalMilliseconds);
+        return unixTimestampMillis.ToString();
+    }
+
+    public static string ToUnixTimeMillisecondsStartOfDayString(this DateTime date)
+    {
+        DateTime utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+        DateTime startOfDayUtc = utcDate.Date;
+        long unixTimestampMillis = Convert.ToInt64((startOfDayUtc - DateTime.UnixEpoch).TotalMilliseconds);
+        return unixTimestampMillis.ToString();
+    }
+
+    public static string ToUnixTimeMillisecondsEndOfDayString(this DateTime date)
+    {
+        DateTime utcDate = DateTime.SpecifyKind(date, DateTimeKind.Utc);
+        DateTime endOfDayUtc = utcDate.Date.AddDays(1).AddMilliseconds(-1);
+        long unixTimestampMillis = Convert.ToInt64((endOfDayUtc - DateTime.UnixEpoch).TotalMilliseconds);
+        return unixTimestampMillis.ToString();
+    }
+
 
     public static DateTime ToEST(this DateTime time)
     {

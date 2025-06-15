@@ -15,6 +15,9 @@ public partial class MarketPatternMatcher
     public async Task<List<AlertData>> LowThirdCheck(EarningsReport er, HistoricalData erDay, HistoricalData erDayAfter, List<HistoricalData> checkRange, CancellationToken cToken)
     {
         var newAlerts = new List<AlertData>();
+        if (er.Alerts.Any(x => x.Type == $"{AlertType.LowThirdAlert}"))
+            return newAlerts;
+
         var decX = new[] { erDayAfter.Open, erDayAfter.Close }.Max();
         var decY = new[] { erDay.Open, erDay.Close }.Min();
         //var c1 = decY - (decY - decX) / 2;
@@ -32,7 +35,9 @@ public partial class MarketPatternMatcher
             .ToList();
         var newThirdAlerts = lowThirdAlertDays
             .Where(x => !prevLowThirdAlertDates.Contains(x.Date))
+            .OrderBy(x => x.Date)
             .ToList();
+        
         foreach (var alertDay in newThirdAlerts)
         {
             newAlerts.Add(new AlertData
@@ -44,8 +49,10 @@ public partial class MarketPatternMatcher
                 Category = erDay.IndustryInfo?.Category,
                 IsWatched = await _db.IsWatched(er.Symbol, cToken),
                 Date = alertDay.Date,
-                Message = ",Jump low - test back 1/2"
+                Message = "Jump low - test back 1/2"
             });
+
+            break;
         }
 
         return newAlerts;

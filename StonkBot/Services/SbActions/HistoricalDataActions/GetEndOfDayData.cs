@@ -42,9 +42,9 @@ internal partial class SbAction
                     .Skip(i)
                     .Take(grabSize)
                     .ToList();
-                var subListQuotes = await _tdaClient.GetQuotesAsync(subList, cToken);
+                var subListQuotes = await _marketClient.GetQuotesAsync(subList, cToken);
                 
-                foreach (var quote in subListQuotes)
+                foreach (var quote in subListQuotes!)
                 {
                     if (quote == null)
                         continue;
@@ -52,17 +52,24 @@ internal partial class SbAction
                     var dbCheck = await _db.HistoricalData.FindAsync(new object?[] { quote.symbol, today }, cToken);
                     if (dbCheck != null)
                         continue;
-                    
-                    newData.Add(new HistoricalData
+
+                    try
                     {
-                        Symbol = quote.symbol,
-                        Date = today,
-                        Open = quote.openPrice,
-                        Close = quote.regularMarketLastPrice,
-                        Low = quote.lowPrice,
-                        High = quote.highPrice,
-                        Volume = quote.totalVolume
-                    });
+                        newData.Add(new HistoricalData
+                        {
+                            Symbol = quote.symbol!,
+                            Date = today,
+                            Open = quote.openPrice,
+                            Close = quote.regularMarketLastPrice,
+                            Low = quote.lowPrice,
+                            High = quote.highPrice,
+                            Volume = quote.totalVolume
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        _con.WriteLog(MessageSeverity.Error, _targetLog, $"Error creating HistoricalData record for {quote.symbol}: {ex.Message}");
+                    }
                 }
                 _con.WriteProgress(i + 250, symbolCount);
             }
@@ -70,7 +77,7 @@ internal partial class SbAction
             _con.WriteLog(MessageSeverity.Info, _targetLog, newData.Count > 0 ? $"Saving changes for {newData.Count} db entries!" : "No new data to save!");
             
             // Add data to DB
-            if (newData.Any())
+            if (newData.Count != 0)
                 await _db.HistoricalData.AddRangeAsync(newData, cToken);
 
             await _db.SbSaveChangesAsync(cToken);

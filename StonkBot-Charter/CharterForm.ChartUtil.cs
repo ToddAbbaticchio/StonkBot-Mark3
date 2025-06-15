@@ -1,9 +1,11 @@
-﻿using StonkBot.Data.Enums;
+﻿using StonkBot.Data.Entities;
+using StonkBot.Data.Enums;
 using StonkBotChartoMatic.Charter.Extensions;
 using StonkBotChartoMatic.Services.FileUtilService.Enums;
 using StonkBotChartoMatic.Services.FileUtilService.Models;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Threading;
@@ -116,6 +118,48 @@ public sealed partial class CharterForm
         }
     }
 
+    public async Task DrawCandleChart(List<EsCandle> candleList, CancellationToken cToken)
+    {
+        chart1.Series.Clear();
+        chart2.Series.Clear();
+        await SetChartSize(candleList);
+
+        var cSeries = new Series();
+        cSeries.ChartArea = "Chart1Area";
+        cSeries.ChartType = SeriesChartType.Candlestick;
+        cSeries.XValueType = ChartValueType.DateTime;
+        cSeries.YValueType = ChartValueType.Double;
+        cSeries.YValuesPerPoint = 4;
+
+        var vSeries = new Series();
+        vSeries.ChartArea = "Chart1Area";
+        vSeries.ChartType = SeriesChartType.Column;
+        vSeries.XValueType = ChartValueType.DateTime;
+        vSeries.YValueType = ChartValueType.Double;
+
+        foreach (var candle in candleList)
+        {
+            object[] candleInfo = { candle.Low, candle.High, candle.Open, candle.Close };
+            var thisC = cSeries.Points.AddXY(candle.ChartTime, candleInfo);
+            var thisV = vSeries.Points.AddXY(candle.ChartTime, candle.Volume);
+
+            // Set C and V dataPoint colors
+            if (candle.Open > candle.Close)
+            {
+                cSeries.Points[thisC].Color = Color.FromArgb(255, Color.OrangeRed);
+                cSeries.Points[thisC].BackSecondaryColor = Color.FromArgb(255, Color.OrangeRed);
+                vSeries.Points[thisV].Color = Color.FromArgb(255, Color.OrangeRed);
+            }
+            else
+            {
+                cSeries.Points[thisC].Color = Color.FromArgb(255, Color.ForestGreen);
+                vSeries.Points[thisV].Color = Color.FromArgb(255, Color.ForestGreen);
+            }
+        }
+        chart1.Series.Add(cSeries);
+        chart2.Series.Add(vSeries);
+    }
+
     public Task SetChartSize(List<TCandle> candleList)
     {
         var yMin = (double)candleList
@@ -133,6 +177,30 @@ public sealed partial class CharterForm
         var yIntervalApprox = (yMax - yMin) / 100;
         var yInterval = yIntervals.First(x => x > yIntervalApprox);
 
+
+        // Chart1 Setup
+        chart1.ChartAreas.First().Name = "Chart1Area";
+        chart1.ChartAreas.First().AxisY.Minimum = yMin - yInterval;
+        chart1.ChartAreas.First().AxisY.Maximum = yMax + yInterval;
+        chart1.ChartAreas.First().AxisY.LabelStyle.Format = "0";
+        chart1.ChartAreas.First().AxisX.LabelStyle.Format = "HH:mm";
+
+        // Chart2 Setup
+        chart2.ChartAreas.First().Name = "Chart2Area";
+        chart2.ChartAreas.First().AxisY.LabelStyle.Format = "0";
+        chart2.ChartAreas.First().AxisX.LabelStyle.Format = "HH:mm";
+        return Task.CompletedTask;
+    }
+
+    public Task SetChartSize(List<EsCandle> candleList)
+    {
+        var yMin = (double)candleList.SelectMany(x => new[] { x.Open, x.Close, x.Low, x.High }).Min();
+        var yMax = (double)candleList.SelectMany(x => new[] { x.Open, x.Close, x.Low, x.High }).Max();
+        var volMin = (double)candleList.Select(x => x.Volume).Min();
+        var volMax = (double)candleList.Select(x => x.Volume).Max();
+        var yIntervals = new List<double> { 10, 25, 50, 100, 250, 500 };
+        var yIntervalApprox = (yMax - yMin) / 100;
+        var yInterval = yIntervals.First(x => x > yIntervalApprox);
 
         // Chart1 Setup
         chart1.ChartAreas.First().Name = "Chart1Area";

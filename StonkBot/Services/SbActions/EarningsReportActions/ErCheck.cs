@@ -1,13 +1,11 @@
-﻿using System.Diagnostics;
-using System.Threading.Channels;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using StonkBot.Data.Entities;
-using StonkBot.Data.Enums;
 using StonkBot.Extensions;
 using StonkBot.MarketPatterns.Models;
 using StonkBot.Options;
 using StonkBot.Services.ConsoleWriter.Enums;
 using StonkBot.Services.DiscordService.Enums;
+using StonkBot.Services.DiscordService.Models;
 
 namespace StonkBot.Services.SbActions;
 
@@ -20,48 +18,37 @@ internal partial class SbAction
 {
     public async Task ErCheck(CancellationToken cToken)
     {
-        const string headerRow = "Sector,Industry,Category,Symbol,IsWatched,AlertDate,AlertMessage";
-        var discordMessageStrings = new List<string> { headerRow };
+        var allAlertsTable = new DiscordTableMessage(DiscordChannel.EarningsReport, "ALL ER Alerts", "SECTOR,INDUSTRY,CATEGORY,SYMBOL,IS WATCHED,ALERT DATE,ALERT MESSAGE");
+        var watchedAlertsTable = new DiscordTableMessage(DiscordChannel.EarningsReport, "Watched ER Alerts Highlight", "SYMBOL,SECTOR,MESSAGE");
+
         var today = DateTime.Now.SbDate();
-        var erSymbols = await _db.EarningsReports
-            .Select(x => x.Symbol)
-            .Distinct()
-            .OrderBy(x => x)
+        var erList = await _db.EarningsReports
+            .Include(x => x.Alerts)
+            .GroupBy(x => x.Symbol)
+            .Select(g => g
+                .OrderByDescending(er => er.Date)
+                .First())
             .ToListAsync(cToken);
 
         // SymbolOverride ////////////////////////////////////
-        //erSymbols = new List<string> { "CVNA" };
+        //erList = erList.Where(x => x.Symbol == "").First(); 
         //////////////////////////////////////////////////////
 
-        var toProcessCount = erSymbols.Count;
+        var toProcessCount = erList.Count;
         var processed = 0;
-        foreach (var symbol in erSymbols)
+        foreach (var er in erList)
         {
             var flaggedAlerts = new List<AlertData>();
             
             try
             {
-                // get latest earnings report
-                var er = _db.EarningsReports
-                    .Where(x => x.Symbol == symbol)
-                    .Include(x => x.Alerts)
-                    .AsSingleQuery()
-                    .ToList()
-                    .MaxBy(x => x.Date);
-
-                if (er == null)
-                {
-                    _con.WriteLog(MessageSeverity.Warning, _targetLog, $"Unable to retrieve earnings report for {symbol}");
-                    continue;
-                }
-
                 // get hData since er.Date
                 var hData = await _db.HistoricalData
-                    .Where(x => x.Symbol == symbol)
+                    .Where(x => x.Symbol == er.Symbol)
                     .Where(x => x.Date >= er.Date)
                     .Include(x => x.IndustryInfo)
                     .ToListAsync(cToken);
-                if (!hData.Any())
+                if (hData.Count == 0)
                     continue;
 
                 // Grab openingDay / dayAfter
@@ -209,42 +196,26 @@ internal partial class SbAction
                     }
                 }
 
-                // Watched alert table
-                var watchedAlerts = flaggedAlerts.Where(x => x.IsWatched == "WATCHED").ToList();
-                var alreadyPosted = _db.DiscordMessageRecords
-                    .Where(x => x.DateTime == today)
-                    .Any(x => x.Type == AlertType.WatchedAlertTable);
-                
-                if (watchedAlerts.Any() && !alreadyPosted)
-                {
-                    var bodyData = new List<List<string>> { new() { "SYMBOL", "SECTOR", "MESSAGE" } };
-                    watchedAlerts.ForEach(x => bodyData.Add(new List<string>{x.Symbol, x.Sector!, x.Message}));
-
-                    var messages = await _discordClient.PostTableAsync(DiscordChannel.EarningsReport, "Watched Earnings Reports Alerts", bodyData, today, cToken);
-                    if (messages.Any())
-                    {
-                        var messageRecord = new DiscordMessageRecord
-                        {
-                            MessageId = messages.First(),
-                            Channel = DiscordChannel.EarningsReport.ToString(),
-                            DateTime = today,
-                            Type = AlertType.WatchedAlertTable
-                        };
-
-                        await _db.DiscordMessageRecords.AddAsync(messageRecord, cToken);
-                    }
-                }
-                
-                // Big message
                 foreach (var alert in flaggedAlerts)
                 {
+                    // Ignore alerts that already exist for today
+                    if (er.Alerts.Any(x => x.Type == alert.AlertType.ToString() && x.Date == alert.Date))
+                        continue;
+                    
+                    // Add watched alerts to watched table
+                    if (alert.IsWatched == "WATCHED")
+                        watchedAlertsTable.Data.Add(alert.ToTableMessage("Watched"));
+
+                    // Add to AllAlerts table
+                    allAlertsTable.Data.Add(alert.ToTableMessage("All"));
+
+                    // Add er.Alert
                     er.Alerts.Add(alert.GenerateErAlert());
-                    discordMessageStrings.Add(alert.GetMessageString());
                 }
             }
             catch (Exception ex)
             {
-                _con.WriteLog(MessageSeverity.Error, $"Error processing ER: {symbol}: {ex.Message}");
+                _con.WriteLog(MessageSeverity.Error, $"Error processing ER: {er.Symbol}: {(ex.InnerException != null ? ex.InnerException.Message : ex.Message)}");
             }
             finally
             {
@@ -256,10 +227,12 @@ internal partial class SbAction
             }
         }
 
-        if (discordMessageStrings.Any(x => x != headerRow))
-        {
-            await _discordClient.SendFileAsync(DiscordChannel.EarningsReport, discordMessageStrings, today, cToken);
-            await _db.SbSaveChangesAsync(cToken);
-        }
+        if (watchedAlertsTable.ContainsData())
+            await _discordClient.PostTableAsync(watchedAlertsTable, today, cToken);
+
+        if (allAlertsTable.ContainsData())
+            await _discordClient.PostFileAsync(allAlertsTable, cToken);
+
+        await _db.SbSaveChangesAsync(cToken);
     }
 }

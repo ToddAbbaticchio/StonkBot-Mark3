@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net7.0-windows</TargetFramework>
+    <TargetFramework>net8.0-windows7.0</TargetFramework>
     <OutputType>WinExe</OutputType>
     <RootNamespace>StonkBotChartoMatic</RootNamespace>
     <AssemblyName>StonkBotChartoMatic</AssemblyName>
@@ -28,25 +28,41 @@
 	<PublishSingleFile>true</PublishSingleFile>
 	<IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
+	
   <PropertyGroup>
     <ManifestCertificateThumbprint>FB7917986953814AC411EF6078EEF7394F8D70FB</ManifestCertificateThumbprint>
   </PropertyGroup>
+  
   <PropertyGroup>
     <ManifestKeyFile>StonkBot.pfx</ManifestKeyFile>
   </PropertyGroup>
+  
   <PropertyGroup>
     <GenerateManifests>true</GenerateManifests>
   </PropertyGroup>
+  
   <PropertyGroup>
     <SignManifests>true</SignManifests>
   </PropertyGroup>
+  
   <PropertyGroup>
     <ApplicationIcon>roundRobo.ico</ApplicationIcon>
   </PropertyGroup>
+  
   <PropertyGroup>
     <StartupObject>StonkBotChartoMatic.Program</StartupObject>
     <UseWPF>True</UseWPF>
   </PropertyGroup>
+
+  <ItemGroup>
+	  <None Remove="..\StonkBot\Appsettings\appsettings.json" />
+  </ItemGroup>
+  <ItemGroup>
+	<EmbeddedResource Include="..\StonkBot\Appsettings\appsettings.json">
+	  <LogicalName>appsettings.json</LogicalName>
+	</EmbeddedResource>
+  </ItemGroup>
+
   <ItemGroup>
     <Reference Include="System.Windows.Forms.DataVisualization" />
   </ItemGroup>
@@ -66,21 +82,20 @@
     <Content Include="roundRobo.ico" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="AutoMapper" Version="12.0.1" />
-    <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
-    <PackageReference Include="CsvHelper" Version="30.0.1" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.4" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="7.0.4">
+    <PackageReference Include="AutoMapper" Version="14.0.0" />
+    <PackageReference Include="CsvHelper" Version="33.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.3" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.3">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="7.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="9.0.3" />
     <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="7.0.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.3" />
     <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
-    <PackageReference Include="WinForms.DataVisualization" Version="1.8.0" />
+    <PackageReference Include="WinForms.DataVisualization" Version="1.10.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\StonkBot\StonkBot.csproj" />

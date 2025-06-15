@@ -30,7 +30,7 @@ internal partial class SbAction
                 .AsSingleQuery()
                 .ToListAsync(cToken);
 
-            if (!alertData.Any())
+            if (alertData.Count == 0)
                 return;
 
             var tempFile = new List<string> { headerRow };

@@ -1,4 +1,5 @@
-﻿using StonkBot.Extensions.Enums;
+﻿using StonkBot.Data.Entities;
+using StonkBot.Extensions.Enums;
 using StonkBot.Options;
 
 namespace StonkBot.Extensions;
@@ -89,5 +90,75 @@ public static class MarketExtensions
     public static DateTime ExtendedMarketEndTime(this DateTime time)
     {
         return time.ToEST().Date.AddHours(20);
+    }
+
+    public static DateTime FuturesMarketStartTime(this DateTime time)
+    {
+        return time.Date.AddHours(18);
+    }
+    public static DateTime FuturesMarketEndTime(this DateTime time)
+    {
+        return time.Date.AddHours(17);
+    }
+
+
+    public static List<HistoricalData> GetNegativeDays(this List<HistoricalData> range)
+    {
+        var negDays = new List<HistoricalData>();
+        foreach (var day in range)
+        {
+            // Primary check
+            if (day.Close - day.Open < 0)
+            {
+                negDays.Add(day);
+                continue;
+            }
+
+            // Secondary check
+            try
+            {
+                var prevDay = range.FirstOrDefault(x => x.Date == GetPreviousTradeDay(day.Date));
+                if (prevDay == null || day.Close - prevDay.Close >= 0)
+                    continue;
+                
+                negDays.Add(day);
+            }
+            catch
+            {
+                // don't freak out if there is no previous trade day
+            }
+        }
+        
+        return negDays;
+    }
+
+    public static List<HistoricalData> GetPositiveDays(this List<HistoricalData> range)
+    {
+        var posDays = new List<HistoricalData>();
+        foreach (var day in range)
+        {
+            // Primary check
+            if (day.Close - day.Open > 0)
+            {
+                posDays.Add(day);
+                continue;
+            }
+
+            // Secondary check
+            try
+            {
+                var prevDay = range.FirstOrDefault(x => x.Date == GetPreviousTradeDay(day.Date));
+                if (prevDay == null || day.Close - prevDay.Close <= 0)
+                    continue;
+
+                posDays.Add(day);
+            }
+            catch
+            {
+                // don't freak out if there is no previous trade day
+            }
+        }
+
+        return posDays;
     }
 }

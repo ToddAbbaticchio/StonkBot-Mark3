@@ -36,4 +36,5 @@ public enum AlertType
 
     WatchedAlertTable = 100,
     IpoFirstPassTable = 101,
+    IpoSecondPassTable = 102,
 }

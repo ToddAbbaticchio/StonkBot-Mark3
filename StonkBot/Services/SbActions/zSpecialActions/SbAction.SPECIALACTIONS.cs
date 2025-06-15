@@ -19,8 +19,6 @@ internal partial class SbAction
 {
     public async Task Csv2DbTable(CancellationToken cToken)
     {
-        //await using var _db = new StonkBotDbContext();
-
         var dbTable = _db.EsCandles;
         const string path = @"C:\users\tabba\desktop\testName.csv";
 
@@ -72,8 +70,6 @@ internal partial class SbAction
 
     public async Task ScanFixMissingPeriod(DateTime startDate, string period, int count, CancellationToken cToken)
     {
-        //await using var _db = new StonkBotDbContext();
-
         _con.WriteLog(MessageSeverity.Info, _targetLog, $"Finding missing info in the last {count} {period}(s)...");
         var hData = _db.HistoricalData;
         var symbolList = await hData.Select(x => x.Symbol)
@@ -133,7 +129,7 @@ internal partial class SbAction
         {
             try
             {
-                var goodDataRange = await _tdaClient.GetHistoricalDataAsync(symbol, period, $"{count}", "daily", cToken);
+                var goodDataRange = await _marketClient.GetHistoricalDataAsync(symbol, period, $"{count}", "daily", "1", cToken);
                 _con.WriteLog(MessageSeverity.Info, _targetLog, $"HISTORICAL DATA FOR {symbol} GET!!!!");
                 var actionItems = missingData.Where(x => x.Symbol == symbol).ToList();
                 foreach (var item in actionItems)
@@ -177,7 +173,7 @@ internal partial class SbAction
                 {
                     _con.WriteProgressComplete("ScanComplete!");
                     
-                    if (tdaErrList.Any())
+                    if (tdaErrList.Count != 0)
                     {
                         _con.WriteLog(MessageSeverity.Info, _targetLog, "The following errors were encountered while acquiring required historical data:");
                         tdaErrList.ForEach(x => _con.WriteLog(x));
@@ -253,7 +249,7 @@ internal partial class SbAction
         {
             try
             {
-                var goodDataRange = await _tdaClient.GetHistoricalDataAsync(symbol, period, $"{count}", "daily", cToken);
+                var goodDataRange = await _marketClient.GetHistoricalDataAsync(symbol, period, $"{count}", "daily", cToken);
                 var actionItems = missingData.Where(x => x.Symbol == symbol).ToList();
                 foreach (var item in actionItems)
                 {

@@ -15,7 +15,7 @@ namespace StonkBot.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "7.0.4");
+            modelBuilder.HasAnnotation("ProductVersion", "9.0.3");
 
             modelBuilder.Entity("StonkBot.Data.Entities.AuthToken", b =>
                 {
@@ -238,7 +238,8 @@ namespace StonkBot.Migrations
             modelBuilder.Entity("StonkBot.Data.Entities.IndustryInfo", b =>
                 {
                     b.Property<string>("Symbol")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnOrder(1);
 
                     b.Property<string>("Category")
                         .HasColumnType("TEXT");
@@ -252,6 +253,45 @@ namespace StonkBot.Migrations
                     b.HasKey("Symbol");
 
                     b.ToTable("IndustryInfo");
+                });
+
+            modelBuilder.Entity("StonkBot.Data.Entities.IndustryInfoHData", b =>
+                {
+                    b.Property<string>("Symbol")
+                        .HasColumnType("TEXT")
+                        .HasColumnOrder(1);
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT")
+                        .HasColumnOrder(2);
+
+                    b.Property<decimal?>("EarningsPerShare")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("MarketCap")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("NetIncome")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("RelativeVolume")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("TotalRevenue")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("VolatilityM")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("VolatilityW")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal?>("Volume")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Symbol", "Date");
+
+                    b.ToTable("IndustryInfoHData");
                 });
 
             modelBuilder.Entity("StonkBot.Data.Entities.IpoHData", b =>
@@ -334,6 +374,24 @@ namespace StonkBot.Migrations
                     b.ToTable("IpoListings");
                 });
 
+            modelBuilder.Entity("StonkBot.Data.Entities.MostActive", b =>
+                {
+                    b.Property<string>("Symbol")
+                        .HasColumnType("TEXT")
+                        .HasColumnOrder(1);
+
+                    b.Property<DateTime>("Date")
+                        .HasColumnType("TEXT")
+                        .HasColumnOrder(2);
+
+                    b.Property<int>("Order")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Symbol", "Date");
+
+                    b.ToTable("MostActiveRecords");
+                });
+
             modelBuilder.Entity("StonkBot.Data.Entities.NqCandle", b =>
                 {
                     b.Property<DateTime>("ChartTime")
@@ -387,6 +445,15 @@ namespace StonkBot.Migrations
                         .HasForeignKey("CalculatedFieldsSymbol", "CalculatedFieldsDate");
 
                     b.Navigation("CalculatedFields");
+
+                    b.Navigation("IndustryInfo");
+                });
+
+            modelBuilder.Entity("StonkBot.Data.Entities.IndustryInfoHData", b =>
+                {
+                    b.HasOne("StonkBot.Data.Entities.IndustryInfo", "IndustryInfo")
+                        .WithMany()
+                        .HasForeignKey("Symbol");
 
                     b.Navigation("IndustryInfo");
                 });
